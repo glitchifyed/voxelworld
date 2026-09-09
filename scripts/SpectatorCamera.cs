@@ -5,7 +5,7 @@ public partial class SpectatorCamera : Camera3D
 {
 
     [Export] private float _moveSpeed = 6f;
-    [Export] private float _lookSpeed = 12f;
+    [Export] private float _lookSpeed = 1f;
 
 	private PlayerInput _playerInput = new();
     
@@ -17,7 +17,7 @@ public partial class SpectatorCamera : Camera3D
         
         AddChild(_playerInput);
         
-        Engine.MaxFps = 30;
+        _playerInput.OnInputEnded += Input_Look;
         
     }
 
@@ -27,12 +27,11 @@ public partial class SpectatorCamera : Camera3D
         
         var deltaFloat = (float)delta;
 		
-        _playerInput.StartInputs();
+        _playerInput.CheckInputs();
         
         Process_Movement(deltaFloat);
-        Process_Look(deltaFloat);
         
-        _playerInput.EndInputs();
+        Process_Exit();
         
     }
     
@@ -40,29 +39,44 @@ public partial class SpectatorCamera : Camera3D
     private void Process_Movement(float delta)
     {
         
-        var forwardVector = -Transform.Basis.Z;
         var rightVector = Transform.Basis.X;
+        var upVector = Transform.Basis.Y;
+        var forwardVector = -Transform.Basis.Z;
         
         Position +=
-            (forwardVector * _playerInput.MoveDirection.Y
-            + rightVector * _playerInput.MoveDirection.X)
+            (rightVector * _playerInput.MoveDirection.X
+            + upVector * _playerInput.MoveDirection.Y
+            + forwardVector * _playerInput.MoveDirection.Z)
             
             * _moveSpeed * delta;
         
     }
     
-    private void Process_Look(float delta)
+    private void Process_Exit()
     {
         
-        _playerRotation += _playerInput.MouseDelta;
+        if (!_playerInput.EscJustPressed)
+            return;
+        
+        Input.MouseMode = Input.MouseMode == Input.MouseModeEnum.Captured ? Input.MouseModeEnum.Visible : Input.MouseModeEnum.Captured;
+        
+    }
+    
+    private void Input_Look(InputEvent inputEvent)
+    {
+        
+        if (Input.MouseMode != Input.MouseModeEnum.Captured || inputEvent is not InputEventMouseMotion)
+            return;
+        
+        _playerRotation += _playerInput.MouseDelta * _lookSpeed * 0.5f;
         
         RotationDegrees = new Vector3(
             -_playerRotation.Y,
             -_playerRotation.X,
             0f
-        )
-        * _lookSpeed;
+        );
         
     }
+
 
 }

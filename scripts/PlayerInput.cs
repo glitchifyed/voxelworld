@@ -4,16 +4,20 @@ using System;
 public partial class PlayerInput : Node
 {
 	
-	public Vector2 MoveDirection { get; private set; }
+	public Vector3 MoveDirection { get; private set; }
 	
 	public Vector2 MouseDelta { get; private set; }
 	public Vector2 MousePosition { get; private set; }
+	
+	public Action<InputEvent> OnInputEnded;
+	
+	public bool EscJustPressed;
 
 
     public override void _Ready()
     {
         
-		Input.MouseMode = Input.MouseModeEnum.Captured;
+		
 		
     }
 
@@ -24,20 +28,21 @@ public partial class PlayerInput : Node
 		CheckMouseEvent(inputEvent);
 		CheckMouseMotion(inputEvent);
 		
+		OnInputEnded?.Invoke(inputEvent);
+		
     }
 
 
-	public void StartInputs()
+	public void CheckInputs()
 	{
 		
-		MoveDirection = Input.GetVector("move_left", "move_right", "move_down", "move_up");
+		MoveDirection = new Vector3(
+			Input.GetAxis("move_left", "move_right"),
+			Input.GetAxis("move_down", "move_up"),
+			Input.GetAxis("move_backward", "move_forward")
+		).Normalized();
 		
-	}
-	
-	public void EndInputs()
-	{
-		
-		MouseDelta = Vector2.Zero;
+		EscJustPressed = Input.IsActionJustPressed("exit");
 		
 	}
 	
