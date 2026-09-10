@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public class Chunk
 {
@@ -7,6 +8,10 @@ public class Chunk
 	public readonly MeshInstance3D MeshInstance;
 	
 	public readonly int[,,] Voxels = new int[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
+	
+	
+	private readonly ArrayMesher _arrayMesher = new();
+	
 	
 	
 	public Chunk(int x, int y, int z)
@@ -18,24 +23,24 @@ public class Chunk
 
         MeshInstance = new()
         {
-            Position = new Vector3(X, Y, Z) * WorldSettings.CHUNK_VOXEL_COUNT
+            Position = new Vector3(X, Y, Z) * WorldSettings.CHUNK_VOXEL_COUNT,
+			Mesh = _arrayMesher.ArrayMesh
         };
 		
 		Node chunksNode = World.Singleton.GetNode("Chunks");
 		chunksNode.AddChild(MeshInstance);
 		
+		ConstructMesh();
+		
     }
 	
 	
-	public void Render()
+	public void ConstructMesh()
 	{
 		
-		Vector3[] vertices =
-		{
-			Vector3.Up,
-			Vector3.Right,
-			Vector3.Forward
-		};
+		_arrayMesher.AddQuad();
+		
+		_arrayMesher.AddSurfaces();
 		
 	}
 	
