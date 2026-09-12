@@ -1,6 +1,5 @@
 using Godot;
 using System;
-using System.Collections.Generic;
 
 public class Chunk
 {
@@ -38,10 +37,10 @@ public class Chunk
 	public void ConstructMesh()
 	{
 		
-		_arrayMesher.AddQuad();
+		//_arrayMesher.AddFaceQuad(CubeFace.Bottom);
+		_arrayMesher.AddCube(Vector3.One);
 		
 		_arrayMesher.AddSurfaces();
-		
 	}
 	
 }

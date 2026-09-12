@@ -15,6 +15,8 @@ background_mode = 2
 sky = SubResource("Sky_rwgxs")
 glow_enabled = true
 
+[sub_resource type="BoxMesh" id="BoxMesh_pnkp3"]
+
 [node name="World" type="Node3D" unique_id=1179213428]
 script = ExtResource("1_rwgxs")
 
@@ -29,3 +31,7 @@ shadow_enabled = true
 
 [node name="Camera" type="Camera3D" parent="." unique_id=589396545]
 script = ExtResource("1_nnsk1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1147424448]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+mesh = SubResource("BoxMesh_pnkp3")
