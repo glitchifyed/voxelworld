@@ -6,7 +6,10 @@ public class Dimension
 	
     public int GetBlockIdAtPosition(int x, int y, int z)
     {
-        return 1;
+        if (y < 8)
+            return 1;
+        
+        return 0;
     }
     
 }

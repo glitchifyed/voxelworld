@@ -15,7 +15,6 @@ public class Chunk
 	
 	public Chunk(int x, int y, int z)
 	{
-		
 		X = x;
 		Y = y;
 		Z = z;
@@ -37,8 +36,21 @@ public class Chunk
 	public void ConstructMesh()
 	{
 		
-		//_arrayMesher.AddFaceQuad(CubeFace.Bottom);
-		_arrayMesher.AddCube(Vector3.One);
+		_arrayMesher.ClearArrays();
+		
+		for (int x = 0; x < WorldSettings.CHUNK_VOXEL_COUNT; x++)
+			for (int y = 0; y < WorldSettings.CHUNK_VOXEL_COUNT; y++)
+				for (int z = 0; z < WorldSettings.CHUNK_VOXEL_COUNT; z++)
+				{
+					var globalX = X + x;
+					var globalY = Y + y;
+					var globalZ = Z + z;
+					
+					if (World.Singleton.CurrentDimension.GetBlockIdAtPosition(globalX, globalY, globalZ) == 0)
+						continue;
+					
+					_arrayMesher.AddCube(new Vector3(x, y, z));
+				}
 		
 		_arrayMesher.AddSurfaces();
 	}
