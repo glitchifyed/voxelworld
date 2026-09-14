@@ -3,7 +3,7 @@ using System;
 
 public class Chunk
 {
-	public readonly int X, Y, Z;
+	public readonly VoxelPos Position;
 	public readonly MeshInstance3D MeshInstance;
 	
 	public readonly int[,,] Voxels = new int[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
@@ -13,15 +13,13 @@ public class Chunk
 	
 	
 	
-	public Chunk(int x, int y, int z)
+	public Chunk(VoxelPos position)
 	{
-		X = x;
-		Y = y;
-		Z = z;
+		Position = position;
 
         MeshInstance = new()
         {
-            Position = new Vector3(X, Y, Z) * WorldSettings.CHUNK_VOXEL_COUNT,
+            Position = Position.ToVector3() * WorldSettings.CHUNK_VOXEL_COUNT,
 			Mesh = _arrayMesher.ArrayMesh
         };
 		
@@ -42,14 +40,21 @@ public class Chunk
 			for (int y = 0; y < WorldSettings.CHUNK_VOXEL_COUNT; y++)
 				for (int z = 0; z < WorldSettings.CHUNK_VOXEL_COUNT; z++)
 				{
-					var globalX = X + x;
-					var globalY = Y + y;
-					var globalZ = Z + z;
+					VoxelPos localPos = new(x, y, z);
+					VoxelPos voxelPos = localPos + Position;
 					
-					if (World.Singleton.CurrentDimension.GetBlockIdAtPosition(globalX, globalY, globalZ) == 0)
+					if (World.Singleton.CurrentDimension.GetBlockIdAtPosition(voxelPos) == 0)
 						continue;
 					
-					_arrayMesher.AddCube(new Vector3(x, y, z));
+					foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
+					{
+						VoxelPos nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToVoxelPos();
+						
+						if (World.Singleton.CurrentDimension.GetBlockIdAtPosition(nextPos) != 0)
+							continue;
+						
+						_arrayMesher.AddFaceQuad(cubeFace, localPos.ToVector3());
+					}
 				}
 		
 		_arrayMesher.AddSurfaces();

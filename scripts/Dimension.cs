@@ -4,9 +4,9 @@ using System;
 public class Dimension
 {
 	
-    public int GetBlockIdAtPosition(int x, int y, int z)
+    public int GetBlockIdAtPosition(VoxelPos position)
     {
-        if (y < 8)
+        if (position.Y < 8)
             return 1;
         
         return 0;
