@@ -17,8 +17,6 @@ public partial class World : Node
 		Singleton = this;
 		
 		CurrentDimension = new();
-		
-		var chunk = new Chunk(VoxelPos.Zero);
 	}
 	
 }
