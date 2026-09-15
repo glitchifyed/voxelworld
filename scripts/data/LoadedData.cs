@@ -11,6 +11,7 @@ public static class LoadedData
     public static void Load()
     {
         _loadedData.Clear();
+        GenericData.ResetCount();
         
         // TODO: Load data from JSON files
         Add(new("Unknown", "unknown"));
