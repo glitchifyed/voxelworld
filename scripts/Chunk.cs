@@ -20,7 +20,8 @@ public class Chunk
         MeshInstance = new()
         {
             Position = Position.ToVector3() * WorldSettings.CHUNK_VOXEL_COUNT,
-			Mesh = _arrayMesher.ArrayMesh
+			Mesh = _arrayMesher.ArrayMesh,
+			MaterialOverride = WorldSettings.ChunkMeshMaterial
         };
 		
 		Node chunksNode = World.Singleton.GetNode("Chunks");
@@ -43,17 +44,19 @@ public class Chunk
 					VoxelPos localPos = new(x, y, z);
 					VoxelPos voxelPos = localPos + Position;
 					
-					if (World.Singleton.CurrentDimension.GetBlockIdAtPosition(voxelPos) == 0)
+					VoxelData voxelData = World.Singleton.CurrentDimension.GetVoxelDataAtPosition(voxelPos);
+					
+					if (!voxelData.Renderable)
 						continue;
 					
 					foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
 					{
 						VoxelPos nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToVoxelPos();
 						
-						if (World.Singleton.CurrentDimension.GetBlockIdAtPosition(nextPos) != 0)
+						if (!World.Singleton.CurrentDimension.GetVoxelDataAtPosition(nextPos).Translucent)
 							continue;
 						
-						_arrayMesher.AddFaceQuad(cubeFace, localPos.ToVector3());
+						_arrayMesher.AddFaceQuad(cubeFace, localPos.ToVector3(), voxelData.ColorTemp);
 					}
 				}
 		

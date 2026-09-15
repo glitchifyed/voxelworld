@@ -11,7 +11,7 @@ public class ArrayMesher
 	private readonly List<Vector3> _vertices = [];
 	private readonly List<Vector3> _normals = [];
 	private readonly List<Vector2> _uvs = [];
-	private readonly List<int> _indices = [];
+	private readonly List<Color> _colors = [];
 
 	private readonly Godot.Collections.Array _surfaceArray = [];
 
@@ -24,7 +24,7 @@ public class ArrayMesher
 	}
 
 
-	public void AddFaceQuad(CubeFace cubeFace, Vector3 offset)
+	public void AddFaceQuad(CubeFace cubeFace, Vector3 offset, Color color)
 	{
 		var faceId = (int)cubeFace;
 		Vector3 normal = MeshStructures.CubeFaceNormals[faceId];
@@ -33,13 +33,14 @@ public class ArrayMesher
 		{
 			_vertices.Add(MeshStructures.CubeVertices[index] + offset);
 			_normals.Add(normal);
+			_colors.Add(color);
 		}
 	}
 	
 	public void AddCube(Vector3 offset)
 	{
 		foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
-			AddFaceQuad(cubeFace, offset);
+			AddFaceQuad(cubeFace, offset, Colors.White);
 	}
 	
 
@@ -48,13 +49,14 @@ public class ArrayMesher
 		_vertices.Clear();
 		_normals.Clear();
 		_uvs.Clear();
-		_indices.Clear();
+		_colors.Clear();
 	}
 
 	public void AddSurfaces()
 	{
 		_surfaceArray[(int)Mesh.ArrayType.Vertex] = _vertices.ToArray();
 		_surfaceArray[(int)Mesh.ArrayType.Normal] = _normals.ToArray();
+		_surfaceArray[(int)Mesh.ArrayType.Color] = _colors.ToArray();
 
 		ArrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, _surfaceArray);
 	}

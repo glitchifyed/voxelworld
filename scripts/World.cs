@@ -17,6 +17,12 @@ public partial class World : Node
 		Singleton = this;
 		
 		CurrentDimension = new();
+		
+		WorldSettings.LoadWorldSettings();
+		
+		LoadedData.Load();
+		
+		CurrentDimension.GetOrGenerateChunk(VoxelPos.Zero);
 	}
 	
 }

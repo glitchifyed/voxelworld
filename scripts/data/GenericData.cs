@@ -5,10 +5,10 @@ public class GenericData
 {
     
     public readonly string Name;
-    public readonly Identifier Id;
+    public readonly string Id;
     
     
-    public GenericData(string name, Identifier id)
+    public GenericData(string name, string id)
     {
         Name = name;
         Id = id;
