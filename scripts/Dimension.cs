@@ -23,10 +23,23 @@ public class Dimension
     
     public string GetVoxelIdAtPosition(VoxelPos position)
     {
+        VoxelPos chunkPos = position / WorldSettings.CHUNK_VOXEL_COUNT;
+        Chunk chunk = _chunks[chunkPos.X, chunkPos.Y, chunkPos.Z];
+        
+        if (chunk != null)
+        {
+            VoxelPos localPos = position - chunkPos * WorldSettings.CHUNK_VOXEL_COUNT;
+            int? voxelId = chunk.GetVoxelIdAtPosition(localPos);
+            
+            if (voxelId.HasValue)
+                return GenericData.GetIdFromNumeric(voxelId.Value);
+            
+        }
+        
         if (position.Y < 8)
             return new Random().NextInt64(0, 2) == 1 ? "game.voxel.stone" : "game.voxel.grass";
         
-        return "game.voxel.air";
+        return null;
     }
     
     public VoxelData GetVoxelDataAtPosition(VoxelPos position)

@@ -11,13 +11,9 @@ public static class LoadedData
     public static void Load()
     {
         _loadedData.Clear();
-        GenericData.ResetCount();
+        GenericData.Reset();
         
         // TODO: Load data from JSON files
-        Add(new("Unknown", "unknown"));
-        
-        Add(new VoxelData("Air", "game.voxel.air") { Renderable = false, Translucent = true });
-        
         Add(new VoxelData("Stone", "game.voxel.stone") { ColorTemp = Color.FromHsv(0, 0, 0.7f) });
         Add(new VoxelData("Grass", "game.voxel.grass") { ColorTemp = Color.FromHsv(0.28f, 0.8f, 0.8f) });
     }
@@ -26,12 +22,17 @@ public static class LoadedData
     public static T GetDataById<T>(string id) where T : GenericData
     {
         if (_loadedData.TryGetValue(id, out GenericData value))
-            return (T) value;
+        {
+            if (value is not T castValue)
+                return null;
+            
+            return castValue;
+        }
         
         // Unknown value
-        GD.PushWarning($"Failed to get data: '{id}' - did you use the wrong identifier? Returning Unknown generic.");
+        GD.PushWarning($"Failed to get data: '{id}' - did you use the wrong identifier?");
         
-        return (T) _loadedData["unknown"];
+        return null;
     }
     
     public static GenericData GetDataById(string id)

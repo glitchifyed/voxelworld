@@ -29,4 +29,10 @@ public class VoxelPos
     
     public static VoxelPos operator -(VoxelPos left, VoxelPos right)
         => new(left.X - right.X, left.Y + right.Y, left.Z - right.Z);
+    
+    public static VoxelPos operator *(VoxelPos left, int right)
+        => new(left.X * right, left.Y * right, left.Z * right);
+    
+    public static VoxelPos operator /(VoxelPos left, int right)
+        => new(left.X / right, left.Y / right, left.Z / right);
 }

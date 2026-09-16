@@ -1,28 +1,35 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public class GenericData
 {
     
-    public static uint DataCount { get; private set; }
+    private readonly static List<string> _numericIds = [];
     
     
     public readonly string Name;
     public readonly string Id;
     
-    public readonly uint NumericId;
+    public readonly int NumericId;
     
     
     public GenericData(string name, string id)
     {
-        NumericId = DataCount++;
+        NumericId = _numericIds.Count;
+        _numericIds.Add(id);
         
         Name = name;
         Id = id;
     }
     
     
-    public static void ResetCount()
-        => DataCount = 0;
+    public static string GetIdFromNumeric(int numericId)
+        => _numericIds[numericId];
+    
+    public static void Reset()
+    {
+        _numericIds.Clear();
+    }
     
 }

@@ -6,7 +6,7 @@ public class Chunk
 	public readonly VoxelPos Position;
 	public readonly MeshInstance3D MeshInstance;
 	
-	public readonly uint[,,] Voxels = new uint[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
+	private readonly int?[,,] _voxels = new int?[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
 	
 	
 	private readonly ArrayMesher _arrayMesher = new();
@@ -31,6 +31,10 @@ public class Chunk
     }
 	
 	
+	public int? GetVoxelIdAtPosition(VoxelPos position)
+		=> _voxels[position.X, position.Y, position.Z];
+	
+	
 	public void Generate()
 	{
 		for (int x = 0; x < WorldSettings.CHUNK_VOXEL_COUNT; x++)
@@ -41,7 +45,7 @@ public class Chunk
 			var voxelPos = new VoxelPos(x, y, z) + Position;
 			var voxelData = World.Singleton.CurrentDimension.GetVoxelDataAtPosition(voxelPos);
 			
-			Voxels[x, y, z] = voxelData.NumericId;
+			_voxels[x, y, z] = voxelData.NumericId;
 			
 		}
 	}
@@ -61,9 +65,7 @@ public class Chunk
 			
 			VoxelData voxelData = World.Singleton.CurrentDimension.GetVoxelDataAtPosition(voxelPos);
 			
-			
-			
-			if (!voxelData.Renderable)
+			if (voxelData != null && !voxelData.Renderable)
 				continue;
 			
 			foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
