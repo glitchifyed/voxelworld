@@ -21,7 +21,31 @@ public class Dimension
     }
     
     
-    public string GetVoxelIdAtPosition(VoxelPos position)
+    public string GetGeneratedVoxelId(VoxelPos position)
+    {
+        if (position.Y < 8)
+            return new Random().NextInt64(0, 2) == 1 ? "game.voxel.stone" : "game.voxel.grass";
+        
+        return null;
+    }
+    
+    public bool TryGetGeneratedVoxelData(VoxelPos voxelPos, out VoxelData voxelData)
+    {
+        string generatedId = GetGeneratedVoxelId(voxelPos);
+        
+        if (generatedId == null)
+        {
+            voxelData = null;
+            
+            return false;
+        }
+        
+        voxelData = LoadedData.GetDataById<VoxelData>(generatedId);
+        
+        return voxelData != null;
+    }
+    
+    public bool TryGetVoxelIdAtPosition(VoxelPos position, out string id)
     {
         VoxelPos chunkPos = position / WorldSettings.CHUNK_VOXEL_COUNT;
         Chunk chunk = _chunks[chunkPos.X, chunkPos.Y, chunkPos.Z];
@@ -32,17 +56,24 @@ public class Dimension
             int? voxelId = chunk.GetVoxelIdAtPosition(localPos);
             
             if (voxelId.HasValue)
-                return GenericData.GetIdFromNumeric(voxelId.Value);
-            
+            {
+                id = GenericData.GetIdFromNumeric(voxelId.Value);
+                
+                return id != null;
+            }
         }
         
-        if (position.Y < 8)
-            return new Random().NextInt64(0, 2) == 1 ? "game.voxel.stone" : "game.voxel.grass";
+        id = GetGeneratedVoxelId(position);
         
-        return null;
+        return id != null;
     }
     
-    public VoxelData GetVoxelDataAtPosition(VoxelPos position)
-        => LoadedData.GetDataById<VoxelData>(GetVoxelIdAtPosition(position));
+    public bool TryGetVoxelDataAtPosition(VoxelPos position, out VoxelData voxelData)
+    {
+        voxelData = TryGetVoxelIdAtPosition(position, out string id)
+            ? LoadedData.GetDataById<VoxelData>(id) : null;
+        
+        return voxelData != null;
+    }
     
 }

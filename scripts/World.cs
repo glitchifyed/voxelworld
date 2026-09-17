@@ -8,6 +8,8 @@ public partial class World : Node
 	
 	public Dimension CurrentDimension;
 	
+	public Node3D ChunksNode { get; private set; }
+	
 	
 	public override void _Ready()
 	{
@@ -17,6 +19,8 @@ public partial class World : Node
 		Singleton = this;
 		
 		CurrentDimension = new();
+		
+		ChunksNode = GetNode<Node3D>("Chunks");
 		
 		WorldSettings.LoadWorldSettings();
 		

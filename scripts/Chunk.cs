@@ -10,6 +10,7 @@ public class Chunk
 	
 	
 	private readonly ArrayMesher _arrayMesher = new();
+	private readonly Dimension _dimension;
 	
 	
 	
@@ -24,8 +25,7 @@ public class Chunk
 			MaterialOverride = WorldSettings.ChunkMeshMaterial
         };
 		
-		Node chunksNode = World.Singleton.GetNode("Chunks");
-		chunksNode.AddChild(MeshInstance);
+		World.Singleton.ChunksNode.AddChild(MeshInstance);
 		
 		ConstructMesh();
     }
@@ -43,9 +43,9 @@ public class Chunk
 		{
 			
 			var voxelPos = new VoxelPos(x, y, z) + Position;
-			var voxelData = World.Singleton.CurrentDimension.GetVoxelDataAtPosition(voxelPos);
 			
-			_voxels[x, y, z] = voxelData.NumericId;
+			if (World.Singleton.CurrentDimension.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
+				_voxels[x, y, z] = voxelData.NumericId;
 			
 		}
 	}
@@ -63,16 +63,20 @@ public class Chunk
 			VoxelPos localPos = new(x, y, z);
 			VoxelPos voxelPos = localPos + Position;
 			
-			VoxelData voxelData = World.Singleton.CurrentDimension.GetVoxelDataAtPosition(voxelPos);
-			
-			if (voxelData != null && !voxelData.Renderable)
+			if (
+				World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(voxelPos, out VoxelData voxelData)
+				&& !voxelData.Renderable
+				)
 				continue;
 			
 			foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
 			{
 				VoxelPos nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToVoxelPos();
 				
-				if (!World.Singleton.CurrentDimension.GetVoxelDataAtPosition(nextPos).Translucent)
+				if (
+					World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
+					&& adjacentVoxelData.Translucent
+					)
 					continue;
 				
 				_arrayMesher.AddFaceQuad(cubeFace, localPos.ToVector3(), voxelData.ColorTemp);
