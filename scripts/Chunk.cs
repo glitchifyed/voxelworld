@@ -64,8 +64,8 @@ public class Chunk
 			VoxelPos voxelPos = localPos + Position;
 			
 			if (
-				World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(voxelPos, out VoxelData voxelData)
-				&& !voxelData.Renderable
+				!World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(voxelPos, out VoxelData voxelData)
+				|| !voxelData.Renderable
 				)
 				continue;
 			
@@ -75,7 +75,7 @@ public class Chunk
 				
 				if (
 					World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
-					&& adjacentVoxelData.Translucent
+					&& !adjacentVoxelData.Translucent
 					)
 					continue;
 				
