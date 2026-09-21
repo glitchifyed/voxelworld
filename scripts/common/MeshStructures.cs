@@ -50,8 +50,6 @@ public class MeshStructures
 	];
     
     public static readonly Vector3[] CubeFaceNormals = [
-		// Godot uses clockwise ordering
-		
 		// Front
 		new Vector3(0, 0, -1),
 
@@ -70,4 +68,5 @@ public class MeshStructures
 		// Bottom
         new Vector3(0, -1, 0),
 	];
+	
 }

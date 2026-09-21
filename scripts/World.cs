@@ -26,7 +26,11 @@ public partial class World : Node
 		
 		LoadedData.Load();
 		
-		CurrentDimension.GetOrGenerateChunk(VoxelPos.Zero);
+		foreach (VoxelPos chunkPos in VoxelPos.OnAllAxes(WorldSettings.WORLD_CHUNK_COUNT))
+			CurrentDimension.GetOrGenerateChunk(chunkPos);
+		
+		foreach (Chunk chunk in CurrentDimension.Chunks)
+			chunk.ConstructMesh();
 	}
 	
 }

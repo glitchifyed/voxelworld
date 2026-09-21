@@ -4,6 +4,10 @@ using System;
 public class Chunk
 {
 	public readonly VoxelPos Position;
+	public VoxelPos GlobalPosition
+	{
+		get => Position * WorldSettings.CHUNK_VOXEL_COUNT;
+	}
 	public readonly MeshInstance3D MeshInstance;
 	
 	private readonly int?[,,] _voxels = new int?[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
@@ -20,14 +24,13 @@ public class Chunk
 
         MeshInstance = new()
         {
+			Name = $"Chunk @ {position}",
             Position = Position.ToVector3() * WorldSettings.CHUNK_VOXEL_COUNT,
 			Mesh = _arrayMesher.ArrayMesh,
 			MaterialOverride = WorldSettings.ChunkMeshMaterial
         };
 		
 		World.Singleton.ChunksNode.AddChild(MeshInstance);
-		
-		ConstructMesh();
     }
 	
 	
@@ -37,15 +40,13 @@ public class Chunk
 	
 	public void Generate()
 	{
-		for (int x = 0; x < WorldSettings.CHUNK_VOXEL_COUNT; x++)
-		for (int y = 0; y < WorldSettings.CHUNK_VOXEL_COUNT; y++)
-		for (int z = 0; z < WorldSettings.CHUNK_VOXEL_COUNT; z++)
+		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
 		{
 			
-			var voxelPos = new VoxelPos(x, y, z) + Position;
+			var voxelPos = localPos + GlobalPosition;
 			
 			if (World.Singleton.CurrentDimension.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
-				_voxels[x, y, z] = voxelData.NumericId;
+				_voxels[localPos.X, localPos.Y, localPos.Z] = voxelData.NumericId;
 			
 		}
 	}
@@ -55,13 +56,10 @@ public class Chunk
 	{
 		_arrayMesher.ClearArrays();
 		
-		for (int x = 0; x < WorldSettings.CHUNK_VOXEL_COUNT; x++)
-		for (int y = 0; y < WorldSettings.CHUNK_VOXEL_COUNT; y++)
-		for (int z = 0; z < WorldSettings.CHUNK_VOXEL_COUNT; z++)
+		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
 		{
 			
-			VoxelPos localPos = new(x, y, z);
-			VoxelPos voxelPos = localPos + Position;
+			VoxelPos voxelPos = localPos + GlobalPosition;
 			
 			if (
 				!World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(voxelPos, out VoxelData voxelData)

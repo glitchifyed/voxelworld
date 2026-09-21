@@ -4,29 +4,37 @@ using System;
 public class Dimension
 {
     
-    private readonly Chunk[,,] _chunks = new Chunk[WorldSettings.WORLD_CHUNK_COUNT, WorldSettings.WORLD_CHUNK_COUNT, WorldSettings.WORLD_CHUNK_COUNT];
-	
+    public readonly Chunk[,,] Chunks = new Chunk[WorldSettings.WORLD_CHUNK_COUNT, WorldSettings.WORLD_CHUNK_COUNT, WorldSettings.WORLD_CHUNK_COUNT];
+    
     
     public Chunk GetOrGenerateChunk(VoxelPos position)
     {
-        Chunk storedChunk = _chunks[position.X, position.Y, position.Z];
+        Chunk storedChunk = Chunks[position.X, position.Y, position.Z];
         if (storedChunk != null)
             return storedChunk;
         
-        storedChunk = new(position);
+        Chunk newChunk = new(position);
+        newChunk.Generate();
         
-        _chunks[position.X, position.Y, position.Z] = storedChunk;
+        Chunks[position.X, position.Y, position.Z] = newChunk;
         
-        return storedChunk;
+        return newChunk;
     }
     
     
     public string GetGeneratedVoxelId(VoxelPos position)
     {
-        if (position.Y < 8)
-            return new Random().NextInt64(0, 2) == 1 ? "game.voxel.stone" : "game.voxel.grass";
+        Random random = new();
+        
+        if (position.Y < 8 + random.NextInt64(-1, 2))
+            return random.NextInt64(0, 2) == 1 ? "game.voxel.stone" : "game.voxel.grass";
         
         return null;
+        
+        // if (random.NextInt64(0, 3) <= 1)
+        //     return null;
+        
+        // return random.NextInt64(0, 2) == 1 ? "game.voxel.stone" : "game.voxel.grass";
     }
     
     public bool TryGetGeneratedVoxelData(VoxelPos voxelPos, out VoxelData voxelData)
@@ -48,7 +56,7 @@ public class Dimension
     public bool TryGetVoxelIdAtPosition(VoxelPos position, out string id)
     {
         VoxelPos chunkPos = position / WorldSettings.CHUNK_VOXEL_COUNT;
-        Chunk chunk = _chunks[chunkPos.X, chunkPos.Y, chunkPos.Z];
+        Chunk chunk = VoxelPos.TryGetValueInArraySafely(Chunks, chunkPos);
         
         if (chunk != null)
         {
@@ -63,7 +71,8 @@ public class Dimension
             }
         }
         
-        id = GetGeneratedVoxelId(position);
+        //id = GetGeneratedVoxelId(position);
+        id = null;
         
         return id != null;
     }
