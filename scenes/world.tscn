@@ -17,8 +17,9 @@ glow_enabled = true
 
 [sub_resource type="BoxMesh" id="BoxMesh_pnkp3"]
 
-[node name="World" type="Node3D" unique_id=1179213428]
+[node name="World" type="Node3D" unique_id=1179213428 node_paths=PackedStringArray("viewportNode")]
 script = ExtResource("1_rwgxs")
+viewportNode = NodePath("Camera")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=100720273]
 environment = SubResource("Environment_4wyf3")

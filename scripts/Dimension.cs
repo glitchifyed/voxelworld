@@ -6,10 +6,17 @@ public class Dimension
     
     public readonly Chunk[,,] Chunks = new Chunk[WorldSettings.WORLD_CHUNK_COUNT, WorldSettings.WORLD_CHUNK_COUNT, WorldSettings.WORLD_CHUNK_COUNT];
     
+    private readonly FastNoiseLite _generatorFastNoise = new()
+    {
+        NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin
+    };
+    
     
     public Chunk GetOrGenerateChunk(VoxelPos position)
     {
-        Chunk storedChunk = Chunks[position.X, position.Y, position.Z];
+        if (!position.TryGetValueInArraySafely(Chunks, out Chunk storedChunk))
+            return null;
+        
         if (storedChunk != null)
             return storedChunk;
         
@@ -24,17 +31,19 @@ public class Dimension
     
     public string GetGeneratedVoxelId(VoxelPos position)
     {
-        Random random = new();
+        float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, 0f, 2f) / 2f;
+        int height = 10 + Mathf.FloorToInt(5 * heightPercent);
         
-        if (position.Y < 8 + random.NextInt64(-1, 2))
-            return random.NextInt64(0, 2) == 1 ? "game.voxel.stone" : "game.voxel.grass";
+        if (position.Y > height)
+            return null;
         
-        return null;
+        if (position.Y == height)
+            return "game.voxel.grass";
         
-        // if (random.NextInt64(0, 3) <= 1)
-        //     return null;
+        if (position.Y >= height - 3)
+            return "game.voxel.dirt";
         
-        // return random.NextInt64(0, 2) == 1 ? "game.voxel.stone" : "game.voxel.grass";
+        return "game.voxel.stone";
     }
     
     public bool TryGetGeneratedVoxelData(VoxelPos voxelPos, out VoxelData voxelData)
@@ -56,7 +65,7 @@ public class Dimension
     public bool TryGetVoxelIdAtPosition(VoxelPos position, out string id)
     {
         VoxelPos chunkPos = position / WorldSettings.CHUNK_VOXEL_COUNT;
-        Chunk chunk = VoxelPos.TryGetValueInArraySafely(Chunks, chunkPos);
+        chunkPos.TryGetValueInArraySafely(Chunks, out Chunk chunk);
         
         if (chunk != null)
         {

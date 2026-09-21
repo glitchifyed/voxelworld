@@ -67,5 +67,11 @@ public class ArrayMesher
 
 		ArrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, _surfaceArray);
 	}
+	
+	public void ClearSurfaces()
+	{
+		ClearArrays();
+		ArrayMesh.ClearSurfaces();
+	}
 
 }

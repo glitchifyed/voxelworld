@@ -30,6 +30,18 @@ public class VoxelPos
     public override string ToString()
         => $"{GetType().Name}({X}, {Y}, {Z})";
 
+    public override bool Equals(object equalTo)
+    {
+        if (equalTo is VoxelPos voxelPos)
+            return voxelPos.X == X && voxelPos.Y == Y && voxelPos.Z == Z;
+        
+        if (equalTo is Vector3 vectorPos)
+            return vectorPos.ToVoxelPos() == this;
+        
+        return false;
+    }
+
+
     
     public IEnumerator<VoxelPos> GetEnumerator()
     {
@@ -52,12 +64,26 @@ public class VoxelPos
     public static VoxelPos operator /(VoxelPos left, float right)
         => new(Mathf.FloorToInt(left.X / right), Mathf.FloorToInt(left.Y / right), Mathf.FloorToInt(left.Z / right));
     
+    public static bool operator ==(VoxelPos left, VoxelPos right)
+        => left.Equals(right);
     
-    public T TryGetValueInArraySafely<T>(T[,,] array)
-        => AreIndicesWithinArrayBounds(array, X, Y, Z) ? array[X, Y, Z] : default;
+    public static bool operator !=(VoxelPos left, VoxelPos right)
+        => !left.Equals(right);
     
-    public static T TryGetValueInArraySafely<T>(T[,,] array, VoxelPos indices)
-        => indices.TryGetValueInArraySafely(array);
+    
+    public bool TryGetValueInArraySafely<T>(T[,,] array, out T value)
+    {
+        if (AreIndicesWithinArrayBounds(array, X, Y, Z))
+        {
+            value = array[X, Y, Z];
+            
+            return true;
+        }
+        
+        value = default;
+        
+        return false;
+    }
     
     
     private static bool AreIndicesWithinArrayBounds<T>(T[,,] array, params int[] indices)

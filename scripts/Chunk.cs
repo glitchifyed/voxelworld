@@ -85,4 +85,9 @@ public class Chunk
 		_arrayMesher.AddSurfaces();
 	}
 	
+	public void ClearMesh()
+	{
+		_arrayMesher.ClearSurfaces();
+	}
+	
 }

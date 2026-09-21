@@ -10,6 +10,8 @@ public partial class World : Node
 	
 	public Node3D ChunksNode { get; private set; }
 	
+	[Export] private Node3D viewportNode;
+	
 	
 	public override void _Ready()
 	{
@@ -26,11 +28,19 @@ public partial class World : Node
 		
 		LoadedData.Load();
 		
-		foreach (VoxelPos chunkPos in VoxelPos.OnAllAxes(WorldSettings.WORLD_CHUNK_COUNT))
-			CurrentDimension.GetOrGenerateChunk(chunkPos);
+		// foreach (VoxelPos chunkPos in VoxelPos.OnAllAxes(WorldSettings.WORLD_CHUNK_COUNT))
+		// 	CurrentDimension.GetOrGenerateChunk(chunkPos);
 		
-		foreach (Chunk chunk in CurrentDimension.Chunks)
-			chunk.ConstructMesh();
+		// foreach (Chunk chunk in CurrentDimension.Chunks)
+		// 	chunk.ConstructMesh();
+		
+		ChunkRenderManager.SetViewpointNode(viewportNode);
 	}
+
+    public override void _Process(double delta)
+    {
+        ChunkRenderManager.OnProcess();
+    }
+
 	
 }
