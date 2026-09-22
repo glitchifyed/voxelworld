@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Threading;
 
 public class Chunk
 {
@@ -11,6 +12,7 @@ public class Chunk
 	public readonly MeshInstance3D MeshInstance;
 	
 	private readonly int?[,,] _voxels = new int?[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
+	private bool _haveVoxelsChanged;
 	
 	
 	private readonly ArrayMesher _arrayMesher = new();
@@ -30,7 +32,10 @@ public class Chunk
 			MaterialOverride = WorldSettings.ChunkMeshMaterial
         };
 		
-		World.Singleton.ChunksNode.AddChild(MeshInstance);
+		if (World.Singleton.GetIsMainThread())
+			World.Singleton.ChunksNode.AddChild(MeshInstance);
+		else
+			World.Singleton.ChunksNode.CallDeferred(Node.MethodName.AddChild, MeshInstance);
     }
 	
 	
@@ -46,14 +51,25 @@ public class Chunk
 			var voxelPos = localPos + GlobalPosition;
 			
 			if (World.Singleton.CurrentDimension.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
+			{
 				_voxels[localPos.X, localPos.Y, localPos.Z] = voxelData.NumericId;
+				
+				_haveVoxelsChanged = true;
+			}
 			
 		}
 	}
 	
 	
-	public void ConstructMesh()
+	public void CalculateMesh()
 	{
+		if (!_haveVoxelsChanged)
+			return;
+		
+		_haveVoxelsChanged = false;
+		
+		//GD.Print("Calculating mesh...");
+		
 		_arrayMesher.ClearArrays();
 		
 		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
@@ -71,6 +87,7 @@ public class Chunk
 			{
 				VoxelPos nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToVoxelPos();
 				
+				// TODO: cull faces bordering non-generated chunks
 				if (
 					World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
 					&& !adjacentVoxelData.Translucent
@@ -81,13 +98,14 @@ public class Chunk
 			}
 			
 		}
-		
-		_arrayMesher.AddSurfaces();
 	}
 	
-	public void ClearMesh()
+	public void ConstructMesh()
 	{
+		//GD.Print("Constructng mesh..");
+		
 		_arrayMesher.ClearSurfaces();
+		_arrayMesher.AddSurfaces();
 	}
 	
 }

@@ -64,13 +64,12 @@ public class ArrayMesher
 		_surfaceArray[(int)Mesh.ArrayType.Vertex] = _vertices.ToArray();
 		_surfaceArray[(int)Mesh.ArrayType.Normal] = _normals.ToArray();
 		_surfaceArray[(int)Mesh.ArrayType.Color] = _colors.ToArray();
-
+		
 		ArrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, _surfaceArray);
 	}
 	
 	public void ClearSurfaces()
 	{
-		ClearArrays();
 		ArrayMesh.ClearSurfaces();
 	}
 

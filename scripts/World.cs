@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Threading;
 
 public partial class World : Node
 {
@@ -9,6 +10,8 @@ public partial class World : Node
 	public Dimension CurrentDimension;
 	
 	public Node3D ChunksNode { get; private set; }
+	
+	public Thread CurrentThread { get; private set; }
 	
 	[Export] private Node3D viewportNode;
 	
@@ -22,17 +25,13 @@ public partial class World : Node
 		
 		CurrentDimension = new();
 		
+		CurrentThread = Thread.CurrentThread;
+		
 		ChunksNode = GetNode<Node3D>("Chunks");
 		
 		WorldSettings.LoadWorldSettings();
 		
 		LoadedData.Load();
-		
-		// foreach (VoxelPos chunkPos in VoxelPos.OnAllAxes(WorldSettings.WORLD_CHUNK_COUNT))
-		// 	CurrentDimension.GetOrGenerateChunk(chunkPos);
-		
-		// foreach (Chunk chunk in CurrentDimension.Chunks)
-		// 	chunk.ConstructMesh();
 		
 		ChunkRenderManager.SetViewpointNode(viewportNode);
 	}
@@ -41,6 +40,10 @@ public partial class World : Node
     {
         ChunkRenderManager.OnProcess();
     }
+	
+	
+	public bool GetIsMainThread()
+		=> Thread.CurrentThread == CurrentThread;
 
 	
 }
