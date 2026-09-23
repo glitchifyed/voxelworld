@@ -31,8 +31,8 @@ public class Dimension
     
     public string GetGeneratedVoxelId(VoxelPos position)
     {
-        float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, 0f, 2f) / 2f;
-        int height = 10 + Mathf.FloorToInt(5 * heightPercent);
+        float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, -10f, 20f) / 2f;
+        int height = 100 + Mathf.FloorToInt(25 * heightPercent);
         
         if (position.Y > height)
             return null;

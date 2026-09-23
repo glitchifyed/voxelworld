@@ -16,58 +16,54 @@ public static class ChunkRenderManager
     private static readonly VoxelPos _renderBounds = new(WorldSettings.RENDER_DISTANCE_XZ * 2 + 1, WorldSettings.RENDER_DISTANCE_Y * 2 + 1, WorldSettings.RENDER_DISTANCE_XZ * 2 + 1);
     private static readonly VoxelPos _renderBoundsHalf = _renderBounds * 0.5f;
     
+    private static readonly ConcurrentBag<Chunk> _chunksToLoad = [];
     
-    private static readonly ConcurrentBag<List<Chunk>> _chunksToLoad = [];
+    private static Vector3 _globalPosition;
+    
+    // TODO: Frustum culling
     
     
     public static void SetViewpointNode(Node3D node)
         => _viewpointNode = node;
+    
+    public static void OnReady()
+    {
+        Task loadChunks = Task.Run(RunLoadChunksLoop);
+    }
     
     public static void OnProcess()
     {
         
         if (!_chunksToLoad.IsEmpty)
         {
-            // foreach (Chunk chunk in _chunksToLoad)
-            // {
-            //     //chunk.CalculateMesh();
-            //     chunk.ConstructMesh();
-            // }
+            // TODO: render the closest chunks first. Use vertical render distance for amount.
+            foreach (Chunk nextChunk in _chunksToLoad.Take(Math.Min(24, _chunksToLoad.Count)))
+                nextChunk.ConstructMesh();
             
-            List<Chunk> chunksLoadedThisFrame = [];
-            
-            foreach (var taskChunks in _chunksToLoad)
-            {
-                foreach (Chunk chunk in taskChunks)
-                {
-                    if (chunksLoadedThisFrame.Contains(chunk))
-                        continue;
-                    
-                    chunksLoadedThisFrame.Add(chunk);
-                    
-                    chunk.ConstructMesh();
-                }
-            }
-            
-            _chunksToLoad.Clear();
+            //_chunksToLoad.Clear();
         }
+        
+        _globalPosition = _viewpointNode.GlobalPosition;
+    }
+    
+    
+    private static void RunLoadChunksLoop()
+    {
+        while (true)
+            LoadChunks();
+    }
+    
+    private static void LoadChunks()
+    {
         
         if (_viewpointNode == null)
             return;
         
-        VoxelPos currentChunkPosition = _viewpointNode.GlobalPosition.ToVoxelPos() / WorldSettings.CHUNK_VOXEL_COUNT;
+        VoxelPos currentChunkPosition = _globalPosition.ToVoxelPos() / WorldSettings.CHUNK_VOXEL_COUNT;
         if (currentChunkPosition == _chunkPosition)
             return;
         
         _chunkPosition = currentChunkPosition;
-        
-        Task loadChunks = Task.Run(LoadChunks);
-        
-    }
-    
-    
-    private static void LoadChunks()
-    {
         
         Dictionary<VoxelPos, Chunk> loadedChunks = [];
         
@@ -88,20 +84,19 @@ public static class ChunkRenderManager
                     continue;
                 // TODO: chunk data to disk and unload from memory
                 
-                //pair.Value.ClearMesh();
+                //pair.Value.Unload();
             }
         
         _currentLoadedChunks = loadedChunks;
         
         foreach (var pair in loadedChunks)
         {
-            pair.Value.CalculateMesh();
+            if (!pair.Value.CalculateMesh())
+                continue;
             
-            // if (!_chunksToLoad.Contains(pair.Value))
-            //     _chunksToLoad.Add(pair.Value);
+            if (!_chunksToLoad.Contains(pair.Value))
+                _chunksToLoad.Add(pair.Value);
         }
-        
-        _chunksToLoad.Add(loadedChunks.Values.ToList());
         
     }
     

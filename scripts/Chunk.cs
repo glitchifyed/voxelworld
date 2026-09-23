@@ -11,6 +11,8 @@ public class Chunk
 	}
 	public readonly MeshInstance3D MeshInstance;
 	
+	public bool CalculationLock { get; private set; }
+	
 	private readonly int?[,,] _voxels = new int?[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
 	private bool _haveVoxelsChanged;
 	
@@ -61,12 +63,14 @@ public class Chunk
 	}
 	
 	
-	public void CalculateMesh()
+	public bool CalculateMesh()
 	{
-		if (!_haveVoxelsChanged)
-			return;
+		if (CalculationLock || !_haveVoxelsChanged)
+			return false;
 		
 		_haveVoxelsChanged = false;
+		
+		CalculationLock = true;
 		
 		//GD.Print("Calculating mesh...");
 		
@@ -98,6 +102,10 @@ public class Chunk
 			}
 			
 		}
+		
+		CalculationLock = false;
+		
+		return true;
 	}
 	
 	public void ConstructMesh()
@@ -106,6 +114,11 @@ public class Chunk
 		
 		_arrayMesher.ClearSurfaces();
 		_arrayMesher.AddSurfaces();
+	}
+	
+	public void Unload()
+	{
+		_arrayMesher.ClearSurfaces();
 	}
 	
 }
