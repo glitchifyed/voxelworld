@@ -29,12 +29,18 @@ public static class ChunkRenderManager
     
     public static void OnReady()
     {
-        Task.Run(RunChunkGenerator);
+        //Task.Run(RunChunkGenerator);
         Task.Run(RunChunkMeshCalculator);
     }
     
     public static void OnProcess()
     {
+        
+        _globalPosition = _viewpointNode.GlobalPosition;
+        
+        
+        RunChunkGenerator();
+        
         
         if (!_chunkMeshesToConstruct.IsEmpty)
         {
@@ -49,15 +55,24 @@ public static class ChunkRenderManager
             foreach (Chunk chunk in _chunkMeshesToConstruct.Take(Math.Min(8, _chunkMeshesToConstruct.Count)))
                 chunk.ConstructMesh();
         }
-        
-        _globalPosition = _viewpointNode.GlobalPosition;
     }
     
     
     private static void RunChunkGenerator()
     {
-        while (true)
-            GenerateChunksInVicinity();
+        // while (true)
+        //     GenerateChunksInVicinity();
+        
+        if (_viewpointNode == null)
+            return;
+        
+        VoxelPos currentChunkPosition = _globalPosition.ToVoxelPos() / WorldSettings.CHUNK_VOXEL_COUNT;
+        if (currentChunkPosition == _chunkPosition)
+            return;
+        
+        _chunkPosition = currentChunkPosition;
+        
+        Task.Run(GenerateChunksInVicinity);
     }
     
     private static void RunChunkMeshCalculator()
@@ -69,14 +84,14 @@ public static class ChunkRenderManager
     private static void GenerateChunksInVicinity()
     {
         
-        if (_viewpointNode == null)
-            return;
+        // if (_viewpointNode == null)
+        //     return;
         
-        VoxelPos currentChunkPosition = _globalPosition.ToVoxelPos() / WorldSettings.CHUNK_VOXEL_COUNT;
-        if (currentChunkPosition == _chunkPosition)
-            return;
+        // VoxelPos currentChunkPosition = _globalPosition.ToVoxelPos() / WorldSettings.CHUNK_VOXEL_COUNT;
+        // if (currentChunkPosition == _chunkPosition)
+        //     return;
         
-        _chunkPosition = currentChunkPosition;
+        // _chunkPosition = currentChunkPosition;
         
         foreach (VoxelPos renderOffset in _renderBounds)
         {
