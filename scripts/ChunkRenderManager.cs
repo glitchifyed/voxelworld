@@ -9,20 +9,17 @@ using System.Threading.Tasks;
 public static class ChunkRenderManager
 {
     
-    private static VoxelPos _chunkPosition;
+    private static VoxelPos? _chunkPosition;
     private static Node3D _viewpointNode;
     private static CancellationTokenSource _chunkGeneratorTokenSource;
     
     private static readonly VoxelPos _renderBounds = new(WorldSettings.RENDER_DISTANCE_XZ * 2 + 1, WorldSettings.RENDER_DISTANCE_Y * 2 + 1, WorldSettings.RENDER_DISTANCE_XZ * 2 + 1, VoxelPos.VoxelEnumerator.FromCentre);
     private static readonly VoxelPos _renderBoundsHalf = _renderBounds / 2;
     
-    // private static readonly ConcurrentBag<Chunk> _chunkMeshesToCalculate = [];
-    private static readonly ConcurrentQueue<Chunk> _chunkMeshesToCalculate = [];
-    private static readonly ConcurrentBag<Chunk> _chunkMeshesToConstruct = [];
+    private static ConcurrentQueue<Chunk>[] _chunkCalculationsByThread = new ConcurrentQueue<Chunk>[WorldSettings.CHUNK_CALCULATION_THREADS];
+    private static readonly ConcurrentQueue<Chunk> _chunkMeshesToConstruct = [];
     
-    private static readonly List<Chunk> _chunkConstructMain = [];
-    
-    private static Vector3 _globalPosition;
+    private static int _currentCalculationThread;
     
     // TODO: Frustum culling
     
@@ -32,38 +29,31 @@ public static class ChunkRenderManager
     
     public static void OnReady()
     {
-        //Task.Run(RunChunkGenerator);
-        Task.Run(RunChunkMeshCalculator);
+        
+        for (int threadId = 0; threadId < WorldSettings.CHUNK_CALCULATION_THREADS; threadId++)
+        {
+            ConcurrentQueue<Chunk> threadChunks = [];
+            _chunkCalculationsByThread[threadId] = threadChunks;
+            
+            Task.Run(() => RunChunkMeshCalculator(threadChunks, threadId));
+        }
+        
     }
     
     public static void OnProcess()
     {
         
-        _globalPosition = _viewpointNode.GlobalPosition;
-        
-        
         RunChunkGenerator();
         
         
-        if (!_chunkMeshesToConstruct.IsEmpty || _chunkConstructMain.Any())
+        if (!_chunkMeshesToConstruct.IsEmpty)
         {
-            if (_chunkMeshesToConstruct.Count <= WorldSettings.CHUNKS_TO_CONSTRUCT)
+            for (int i = 0; i < WorldSettings.CHUNKS_TO_CONSTRUCT; i++)
             {
-                foreach (Chunk chunk in _chunkMeshesToConstruct)
-                    chunk.ConstructMesh();
+                if (!_chunkMeshesToConstruct.TryDequeue(out Chunk chunk))
+                    break;
                 
-                _chunkMeshesToConstruct.Clear();
-            }
-            else
-            {
-                _chunkConstructMain.AddRange(_chunkMeshesToConstruct.ToArray());
-                _chunkMeshesToConstruct.Clear();
-                
-                if (_chunkConstructMain.Count > 1)
-                    _chunkConstructMain.Sort(CompareChunksByDistance);
-                
-                foreach (Chunk chunk in _chunkConstructMain.Take(WorldSettings.CHUNKS_TO_CONSTRUCT))
-                    chunk.ConstructMesh();
+                chunk.ConstructMesh();
             }
         }
         
@@ -76,12 +66,11 @@ public static class ChunkRenderManager
         if (_viewpointNode == null)
             return;
         
-        VoxelPos currentChunkPosition = _globalPosition.ToVoxelPos() / WorldSettings.CHUNK_VOXEL_COUNT;
+        VoxelPos currentChunkPosition = _viewpointNode.GlobalPosition.ToVoxelPos() / WorldSettings.CHUNK_VOXEL_COUNT;
         if (currentChunkPosition == _chunkPosition)
             return;
         
         _chunkPosition = currentChunkPosition;
-        
         
         _chunkGeneratorTokenSource?.Cancel();
         _chunkGeneratorTokenSource = new();
@@ -94,10 +83,12 @@ public static class ChunkRenderManager
         
     }
     
-    private static void RunChunkMeshCalculator()
+    private static void RunChunkMeshCalculator(ConcurrentQueue<Chunk> threadChunks, int threadId)
     {
+        
         while (true)
-            CalculateChunkMeshes();
+            CalculateChunkMeshes(threadChunks);
+        
     }
     
     private static void GenerateChunksInVicinity(CancellationToken token)
@@ -108,43 +99,34 @@ public static class ChunkRenderManager
             if (token.IsCancellationRequested)
                 break;
             
-            VoxelPos chunkPosition = _chunkPosition + renderOffset - _renderBoundsHalf;
+            VoxelPos chunkPosition = _chunkPosition.Value + renderOffset - _renderBoundsHalf;
             
             Chunk chunk = World.Singleton.CurrentDimension.GetOrGenerateChunk(chunkPosition);
             
             if (!chunk.HasChangedSinceLastRender())
                 continue;
             
-            _chunkMeshesToCalculate.Enqueue(chunk);
+            _chunkCalculationsByThread[_currentCalculationThread].Enqueue(chunk);
+            _currentCalculationThread = (_currentCalculationThread + 1) % WorldSettings.CHUNK_CALCULATION_THREADS;
         }
         
     }
     
-    private static void CalculateChunkMeshes()
+    private static void CalculateChunkMeshes(ConcurrentQueue<Chunk> threadChunks)
     {
         
-        if (_chunkMeshesToCalculate.IsEmpty)
-            return;
-        
-        while (true)
+        while (!threadChunks.IsEmpty)
         {
-            if (!_chunkMeshesToCalculate.TryDequeue(out Chunk chunk))
+            if (!threadChunks.TryDequeue(out Chunk chunk))
                 break;
             
             if (!chunk.CalculateMesh())
                 continue;
             
-            _chunkMeshesToConstruct.Add(chunk);
+            _chunkMeshesToConstruct.Enqueue(chunk);
+            
         }
         
-    }
-    
-    private static int CompareChunksByDistance(Chunk left, Chunk right)
-    {
-        int leftAdded = Math.Abs(left.Position.X) + Math.Abs(left.Position.Y) + Math.Abs(left.Position.Z);
-        int rightAdded = Math.Abs(right.Position.X) + Math.Abs(right.Position.Y) + Math.Abs(right.Position.Z);
-        
-        return leftAdded.CompareTo(rightAdded);
     }
     
 }
