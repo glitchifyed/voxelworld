@@ -20,7 +20,7 @@ public class Dimension
         
         Chunk newChunk = new(position);
         
-        newChunk.Generate();
+        // newChunk.Generate();
         
         Chunks[position] = newChunk;
         

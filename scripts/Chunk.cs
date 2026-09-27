@@ -5,21 +5,24 @@ using System.Threading;
 public class Chunk
 {
 	public readonly VoxelPos Position;
+	public readonly MeshInstance3D MeshInstance;
+	
 	public VoxelPos GlobalPosition
 	{
 		get => Position * WorldSettings.CHUNK_VOXEL_COUNT;
 	}
-	public readonly MeshInstance3D MeshInstance;
 	
-	public bool CalculationLock { get; private set; }
+	public bool IsWithinRange;
 	
 	private readonly int?[,,] _voxels = new int?[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
-	private bool _haveVoxelsChanged;
-	
 	
 	private readonly ArrayMesher _arrayMesher = new();
 	private readonly Dimension _dimension;
 	
+	private bool _reculate;
+	private bool _calculated;
+	private bool _empty = true;
+	private bool _constructed;
 	
 	
 	public Chunk(VoxelPos position)
@@ -56,7 +59,7 @@ public class Chunk
 			{
 				_voxels[localPos.X, localPos.Y, localPos.Z] = voxelData.NumericId;
 				
-				_haveVoxelsChanged = true;
+				_reculate = true;
 			}
 			
 		}
@@ -65,14 +68,10 @@ public class Chunk
 	
 	public bool CalculateMesh()
 	{
-		if (CalculationLock || !_haveVoxelsChanged)
+		if (!_reculate)
 			return false;
 		
-		_haveVoxelsChanged = false;
-		
-		CalculationLock = true;
-		
-		//GD.Print("Calculating mesh...");
+		_reculate = false;
 		
 		_arrayMesher.ClearArrays();
 		
@@ -107,28 +106,44 @@ public class Chunk
 			
 		}
 		
-		CalculationLock = false;
+		_calculated = true;
+		_empty = !haveIRenderedSomething;
 		
 		return haveIRenderedSomething;
 	}
 	
-	public void ConstructMesh()
+	public bool ConstructMesh()
 	{
-		//GD.Print("Constructng mesh..");
+		if (_constructed || _empty)
+			return false;
+		
+		_constructed = true;
 		
 		_arrayMesher.ClearSurfaces();
 		_arrayMesher.AddSurfaces();
+		
+		return true;
 	}
 	
 	public void Unload()
 	{
+		_arrayMesher.ClearArrays();
 		_arrayMesher.ClearSurfaces();
-		
-		_haveVoxelsChanged = true;
+	
+		_constructed = false;
+		_calculated = false;
+		_empty = true;
+		_reculate = true;
 	}
 	
 	
 	public bool HasChangedSinceLastRender()
-		=> _haveVoxelsChanged;
+		=> _reculate;
+	
+	public bool IsConstructed()
+		=> _constructed;
+	
+	public bool IsCalculated()
+		=> _calculated;
 	
 }

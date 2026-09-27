@@ -7,7 +7,7 @@ public static class WorldSettings
 	public const int CHUNKS_TO_CONSTRUCT = 4;
 	public const int CHUNK_CALCULATION_THREADS = 4;
 	
-	public const byte RENDER_DISTANCE_XZ = 8;
+	public const byte RENDER_DISTANCE_XZ = 4;
 	public const byte RENDER_DISTANCE_Y = 6;
 	
 	// TODO: world scale

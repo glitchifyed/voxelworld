@@ -16,8 +16,12 @@ public static class ChunkRenderManager
     private static readonly VoxelPos _renderBounds = new(WorldSettings.RENDER_DISTANCE_XZ * 2 + 1, WorldSettings.RENDER_DISTANCE_Y * 2 + 1, WorldSettings.RENDER_DISTANCE_XZ * 2 + 1, VoxelPos.VoxelEnumerator.FromCentre);
     private static readonly VoxelPos _renderBoundsHalf = _renderBounds / 2;
     
-    private static readonly ConcurrentQueue<Chunk>[] _chunkCalculationsByThread = new ConcurrentQueue<Chunk>[WorldSettings.CHUNK_CALCULATION_THREADS];
-    private static readonly ConcurrentQueue<Chunk> _chunkMeshesToConstruct = [];
+    private static readonly ConcurrentQueue<Chunk>[] _calculationThreads = new ConcurrentQueue<Chunk>[WorldSettings.CHUNK_CALCULATION_THREADS];
+    private static readonly ConcurrentQueue<Chunk> _chunksToConstruct = [];
+    private static readonly ConcurrentQueue<Chunk> _chunksToUnload = [];
+    
+    private static readonly HashSet<Chunk> _constructedChunks = [];
+    private static HashSet<Chunk> _loadedChunks;
     
     private static int _currentCalculationThread;
     
@@ -33,7 +37,7 @@ public static class ChunkRenderManager
         for (int threadId = 0; threadId < WorldSettings.CHUNK_CALCULATION_THREADS; threadId++)
         {
             ConcurrentQueue<Chunk> threadChunks = [];
-            _chunkCalculationsByThread[threadId] = threadChunks;
+            _calculationThreads[threadId] = threadChunks;
             
             Task.Run(
                 () => RunChunkMeshCalculator(threadChunks)
@@ -55,14 +59,29 @@ public static class ChunkRenderManager
         // remove from constructed chunks
         
         
-        if (!_chunkMeshesToConstruct.IsEmpty)
+        while (_chunksToUnload.TryDequeue(out Chunk chunk))
+        {
+            
+            _constructedChunks.Remove(chunk);
+            
+            chunk.Unload();
+            
+        }
+        
+        
+        if (!_chunksToConstruct.IsEmpty)
             for (int i = 0; i < WorldSettings.CHUNKS_TO_CONSTRUCT; i++)
             {
-                if (!_chunkMeshesToConstruct.TryDequeue(out Chunk chunk))
+                if (!_chunksToConstruct.TryDequeue(out Chunk chunk))
                     break;
+                
+                if (!chunk.IsCalculated() || !chunk.IsWithinRange || _chunksToUnload.Contains(chunk))
+                    continue;
                 
                 chunk.ConstructMesh();
             }
+        
+        
         
     }
     
@@ -106,19 +125,38 @@ public static class ChunkRenderManager
         
         foreach (VoxelPos renderOffset in _renderBounds)
         {
-            if (token.IsCancellationRequested)
-                return;
-            
             VoxelPos chunkPosition = _chunkPosition.Value + renderOffset - _renderBoundsHalf;
-            
             Chunk chunk = World.Singleton.CurrentDimension.GetOrGenerateChunk(chunkPosition);
             
             currentlyWithinRendering.Enqueue(chunk);
             
+            chunk.IsWithinRange = true;
+        }
+        
+        if (_loadedChunks != null)
+            foreach (Chunk chunk in _loadedChunks)
+            {
+                if (currentlyWithinRendering.Contains(chunk))
+                    continue;
+                
+                _chunksToUnload.Enqueue(chunk);
+                
+                chunk.IsWithinRange = false;
+            }
+        
+        _loadedChunks = currentlyWithinRendering.ToHashSet();
+        
+        while (!token.IsCancellationRequested)
+        {
+            if (!currentlyWithinRendering.TryDequeue(out Chunk chunk))
+                break;
+            
+            chunk.Generate();
+            
             if (!chunk.HasChangedSinceLastRender())
                 continue;
             
-            _chunkCalculationsByThread[_currentCalculationThread].Enqueue(chunk);
+            _calculationThreads[_currentCalculationThread].Enqueue(chunk);
             _currentCalculationThread = (_currentCalculationThread + 1) % WorldSettings.CHUNK_CALCULATION_THREADS;
         }
         
@@ -132,10 +170,10 @@ public static class ChunkRenderManager
             if (!threadChunks.TryDequeue(out Chunk chunk))
                 break;
             
-            if (!chunk.CalculateMesh())
+            if (!chunk.CalculateMesh() || !chunk.IsWithinRange)
                 continue;
             
-            _chunkMeshesToConstruct.Enqueue(chunk);
+            _chunksToConstruct.Enqueue(chunk);
             
         }
         
