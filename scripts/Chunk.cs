@@ -76,6 +76,8 @@ public class Chunk
 		
 		_arrayMesher.ClearArrays();
 		
+		bool haveIRenderedSomething = false;
+		
 		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
 		{
 			
@@ -99,13 +101,15 @@ public class Chunk
 					continue;
 				
 				_arrayMesher.AddFaceQuad(cubeFace, localPos.ToVector3(), voxelData.ColorTemp);
+				
+				haveIRenderedSomething = true;
 			}
 			
 		}
 		
 		CalculationLock = false;
 		
-		return true;
+		return haveIRenderedSomething;
 	}
 	
 	public void ConstructMesh()
@@ -120,5 +124,9 @@ public class Chunk
 	{
 		_arrayMesher.ClearSurfaces();
 	}
+	
+	
+	public bool HasChangedSinceLastRender()
+		=> _haveVoxelsChanged;
 	
 }

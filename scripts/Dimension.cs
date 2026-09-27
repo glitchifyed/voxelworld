@@ -1,10 +1,11 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public class Dimension
 {
     
-    public readonly Chunk[,,] Chunks = new Chunk[WorldSettings.WORLD_CHUNK_COUNT, WorldSettings.WORLD_CHUNK_COUNT, WorldSettings.WORLD_CHUNK_COUNT];
+    public readonly Dictionary<VoxelPos, Chunk> Chunks = [];
     
     private readonly FastNoiseLite _generatorFastNoise = new()
     {
@@ -14,16 +15,13 @@ public class Dimension
     
     public Chunk GetOrGenerateChunk(VoxelPos position)
     {
-        if (!position.TryGetValueInArraySafely(Chunks, out Chunk storedChunk))
-            return null;
-        
-        if (storedChunk != null)
+        if (Chunks.TryGetValue(position, out Chunk storedChunk))
             return storedChunk;
         
         Chunk newChunk = new(position);
         newChunk.Generate();
         
-        Chunks[position.X, position.Y, position.Z] = newChunk;
+        Chunks[position] = newChunk;
         
         return newChunk;
     }
@@ -32,7 +30,7 @@ public class Dimension
     public string GetGeneratedVoxelId(VoxelPos position)
     {
         float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, -10f, 20f) / 2f;
-        int height = 100 + Mathf.FloorToInt(25 * heightPercent);
+        int height = Mathf.FloorToInt(25 * heightPercent);
         
         if (position.Y > height)
             return null;
@@ -65,9 +63,8 @@ public class Dimension
     public bool TryGetVoxelIdAtPosition(VoxelPos position, out string id)
     {
         VoxelPos chunkPos = position / WorldSettings.CHUNK_VOXEL_COUNT;
-        chunkPos.TryGetValueInArraySafely(Chunks, out Chunk chunk);
         
-        if (chunk != null)
+        if (Chunks.TryGetValue(chunkPos, out Chunk chunk))
         {
             VoxelPos localPos = position - chunkPos * WorldSettings.CHUNK_VOXEL_COUNT;
             int? voxelId = chunk.GetVoxelIdAtPosition(localPos);
@@ -80,8 +77,8 @@ public class Dimension
             }
         }
         
-        //id = GetGeneratedVoxelId(position);
-        id = null;
+        id = GetGeneratedVoxelId(position);
+        //id = null;
         
         return id != null;
     }
