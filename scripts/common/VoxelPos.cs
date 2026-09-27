@@ -10,6 +10,19 @@ public readonly record struct VoxelPos
     public readonly VoxelEnumerator Enumerator;
     
     
+    private static readonly VoxelPos[] FloodFillNeighbours =
+    {
+        new(x: 1),
+        new(x: -1),
+        
+        new(y: 1),
+        new(y: -1),
+        
+        new(z: 1),
+        new(z: -1)
+    };
+    
+    
     public VoxelPos(int x = 0, int y = 0, int z = 0, VoxelEnumerator enumerator = VoxelEnumerator.Default)
     {
         X = x;
@@ -71,36 +84,56 @@ public readonly record struct VoxelPos
     
     public static IEnumerator<VoxelPos> EnumerateFromCentre(VoxelPos bounds)
     {
-        VoxelPos halfOfThis = bounds / 2;
+        VoxelPos startPosition = bounds / 2;
         
         Queue<VoxelPos> queue = [];
+        HashSet<VoxelPos> alreadyVisited = [];
         
-        FloodFillPortion(bounds, queue, halfOfThis.X, halfOfThis.Y, halfOfThis.Z);
+        queue.Enqueue(startPosition);
+        alreadyVisited.Add(startPosition);
         
         while (queue.Count != 0)
-            yield return queue.Dequeue();
+        {
+            VoxelPos currentPosition = queue.Dequeue();
+            
+            yield return currentPosition;
+            
+            foreach (VoxelPos offset in FloodFillNeighbours)
+            {
+                VoxelPos position = currentPosition + offset;
+                
+                if (IsWithinBounds(position, bounds) && alreadyVisited.Add(position))
+                    queue.Enqueue(position);
+            }
+        }
     }
     
+    private static bool IsWithinBounds(VoxelPos position, VoxelPos bounds)
+        =>
+        position.X >= 0 && position.X <= bounds.X &&
+        position.Y >= 0 && position.Y <= bounds.Y &&
+        position.Z >= 0 && position.Z <= bounds.Z;
     
-    private static void FloodFillPortion(VoxelPos bounds, Queue<VoxelPos> queue, int x, int y, int z)
-    {
-        if (x < 0 || x > bounds.X || y < 0 || y > bounds.Y || z < 0 || z > bounds.Z)
-            return;
+    
+    // private static void FloodFillPortion(VoxelPos bounds, Queue<VoxelPos> queue, int x, int y, int z)
+    // {
+    //     if (x < 0 || x > bounds.X || y < 0 || y > bounds.Y || z < 0 || z > bounds.Z)
+    //         return;
         
-        VoxelPos position = new(x, y, z);
+    //     VoxelPos position = new(x, y, z);
         
-        if (queue.Contains(position))
-            return;
+    //     if (queue.Contains(position))
+    //         return;
         
-        queue.Enqueue(position);
+    //     queue.Enqueue(position);
         
-        FloodFillPortion(bounds, queue, x + 1, y, z);
-        FloodFillPortion(bounds, queue, x - 1, y, z);
-        FloodFillPortion(bounds, queue, x, y + 1, z);
-        FloodFillPortion(bounds, queue, x, y - 1, z);
-        FloodFillPortion(bounds, queue, x, y, z + 1);
-        FloodFillPortion(bounds, queue, x, y, z - 1);
-    }
+    //     FloodFillPortion(bounds, queue, x + 1, y, z);
+    //     FloodFillPortion(bounds, queue, x - 1, y, z);
+    //     FloodFillPortion(bounds, queue, x, y + 1, z);
+    //     FloodFillPortion(bounds, queue, x, y - 1, z);
+    //     FloodFillPortion(bounds, queue, x, y, z + 1);
+    //     FloodFillPortion(bounds, queue, x, y, z - 1);
+    // }
     
     
     public static VoxelPos operator +(VoxelPos left, VoxelPos right)
@@ -114,12 +147,6 @@ public readonly record struct VoxelPos
     
     public static VoxelPos operator /(VoxelPos left, float right)
         => new(Mathf.FloorToInt(left.X / right), Mathf.FloorToInt(left.Y / right), Mathf.FloorToInt(left.Z / right));
-    
-    // public static bool operator ==(VoxelPos left, VoxelPos right)
-    //     => left.Equals(right);
-    
-    // public static bool operator !=(VoxelPos left, VoxelPos right)
-    //     => !left.Equals(right);
     
     
     public readonly bool TryGetValueInArraySafely<T>(T[,,] array, out T value)
