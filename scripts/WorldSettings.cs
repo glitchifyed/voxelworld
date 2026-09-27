@@ -4,7 +4,6 @@ using System;
 public static class WorldSettings
 {
 	public const int CHUNK_VOXEL_COUNT = 32;
-	public const int WORLD_CHUNK_COUNT = 64;
 	
 	public const byte RENDER_DISTANCE_XZ = 3;
 	public const byte RENDER_DISTANCE_Y = 2;

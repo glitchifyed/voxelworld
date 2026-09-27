@@ -14,9 +14,10 @@ public static class ChunkRenderManager
     private static Dictionary<VoxelPos, Chunk> _currentLoadedChunks;
     
     private static readonly VoxelPos _renderBounds = new(WorldSettings.RENDER_DISTANCE_XZ * 2 + 1, WorldSettings.RENDER_DISTANCE_Y * 2 + 1, WorldSettings.RENDER_DISTANCE_XZ * 2 + 1);
-    private static readonly VoxelPos _renderBoundsHalf = _renderBounds * 0.5f;
+    private static readonly VoxelPos _renderBoundsHalf = _renderBounds / 2;
     
-    private static readonly ConcurrentBag<Chunk> _chunksToLoad = [];
+    private static readonly ConcurrentBag<Chunk> _chunkMeshesToConstruct = [];
+    private static readonly ConcurrentBag<Chunk> _chunkMeshesToCalculate = [];
     
     private static Vector3 _globalPosition;
     
@@ -28,32 +29,44 @@ public static class ChunkRenderManager
     
     public static void OnReady()
     {
-        Task loadChunks = Task.Run(RunLoadChunksLoop);
+        Task.Run(RunChunkGenerator);
+        Task.Run(RunChunkMeshCalculator);
     }
     
     public static void OnProcess()
     {
         
-        if (!_chunksToLoad.IsEmpty)
+        if (!_chunkMeshesToConstruct.IsEmpty)
         {
             // TODO: render the closest chunks first. Use vertical render distance for amount.
-            foreach (Chunk nextChunk in _chunksToLoad.Take(Math.Min(24, _chunksToLoad.Count)))
-                nextChunk.ConstructMesh();
             
-            //_chunksToLoad.Clear();
+            // List<Chunk> takenChunksToLoad = _chunkMeshesToConstruct.Take(Math.Min(8, _chunkMeshesToConstruct.Count)).ToList();
+            
+            // if (takenChunksToLoad.Count > 1)
+            //     takenChunksToLoad.Sort(CompareChunksByDistance);
+            
+            // foreach (Chunk chunk in takenChunksToLoad)
+            foreach (Chunk chunk in _chunkMeshesToConstruct.Take(Math.Min(8, _chunkMeshesToConstruct.Count)))
+                chunk.ConstructMesh();
         }
         
         _globalPosition = _viewpointNode.GlobalPosition;
     }
     
     
-    private static void RunLoadChunksLoop()
+    private static void RunChunkGenerator()
     {
         while (true)
-            LoadChunks();
+            GenerateChunksInVicinity();
     }
     
-    private static void LoadChunks()
+    private static void RunChunkMeshCalculator()
+    {
+        while (true)
+            CalculateChunkMeshes();
+    }
+    
+    private static void GenerateChunksInVicinity()
     {
         
         if (_viewpointNode == null)
@@ -65,39 +78,48 @@ public static class ChunkRenderManager
         
         _chunkPosition = currentChunkPosition;
         
-        Dictionary<VoxelPos, Chunk> loadedChunks = [];
-        
         foreach (VoxelPos renderOffset in _renderBounds)
         {
             VoxelPos chunkPosition = _chunkPosition + renderOffset - _renderBoundsHalf;
             
             Chunk chunk = World.Singleton.CurrentDimension.GetOrGenerateChunk(chunkPosition);
             
-            if (chunk != null)
-                loadedChunks[chunkPosition] = chunk;
-        }
-        
-        if (_currentLoadedChunks != null)
-            foreach (var pair in _currentLoadedChunks)
-            {
-                if (loadedChunks.ContainsKey(pair.Key))
-                    continue;
-                // TODO: chunk data to disk and unload from memory
-                
-                //pair.Value.Unload();
-            }
-        
-        _currentLoadedChunks = loadedChunks;
-        
-        foreach (var pair in loadedChunks)
-        {
-            if (!pair.Value.CalculateMesh())
+            if (!chunk.HasChangedSinceLastRender())
                 continue;
             
-            if (!_chunksToLoad.Contains(pair.Value))
-                _chunksToLoad.Add(pair.Value);
+            _chunkMeshesToCalculate.Add(chunk);
         }
         
+    }
+    
+    private static void CalculateChunkMeshes()
+    {
+        
+        if (_chunkMeshesToCalculate.IsEmpty)
+            return;
+        
+        List<Chunk> takenChunksToCalculate = _chunkMeshesToCalculate.ToList();
+        _chunkMeshesToCalculate.Clear();
+            
+        if (takenChunksToCalculate.Count > 1)
+            takenChunksToCalculate.Sort(CompareChunksByDistance);
+            
+        foreach (Chunk chunk in takenChunksToCalculate)
+        {
+            if (!chunk.CalculateMesh())
+                continue;
+            
+            _chunkMeshesToConstruct.Add(chunk);
+        }
+        
+    }
+    
+    private static int CompareChunksByDistance(Chunk left, Chunk right)
+    {
+        int leftAdded = Math.Abs(left.Position.X) + Math.Abs(left.Position.Y) + Math.Abs(left.Position.Z);
+        int rightAdded = Math.Abs(right.Position.X) + Math.Abs(right.Position.Y) + Math.Abs(right.Position.Z);
+        
+        return leftAdded.CompareTo(rightAdded);
     }
     
 }
