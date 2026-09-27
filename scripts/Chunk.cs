@@ -123,6 +123,8 @@ public class Chunk
 	public void Unload()
 	{
 		_arrayMesher.ClearSurfaces();
+		
+		_haveVoxelsChanged = true;
 	}
 	
 	

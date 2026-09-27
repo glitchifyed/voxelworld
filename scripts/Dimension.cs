@@ -19,6 +19,7 @@ public class Dimension
             return storedChunk;
         
         Chunk newChunk = new(position);
+        
         newChunk.Generate();
         
         Chunks[position] = newChunk;
