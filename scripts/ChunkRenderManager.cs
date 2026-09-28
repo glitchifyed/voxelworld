@@ -77,8 +77,6 @@ public static class ChunkRenderManager
         
         _chunkPosition = currentChunkPosition;
         
-        GD.Print(currentChunkPosition);
-        
         
         // Get within range
         Queue<Chunk> chunksToCalculate = [];
@@ -185,6 +183,8 @@ public static class ChunkRenderManager
     private static void GenerateChunksInVicinity(CancellationToken token, Queue<Chunk> chunksToGenerate)
     {
         
+        GD.Print("Generating..");
+        
         while (!token.IsCancellationRequested)
         {
             if (!chunksToGenerate.TryDequeue(out Chunk chunk))
@@ -200,6 +200,8 @@ public static class ChunkRenderManager
             _calculationThreads[_currentCalculationThread].Enqueue(chunk);
             _currentCalculationThread = (_currentCalculationThread + 1) % WorldSettings.CHUNK_CALCULATION_THREADS;
         }
+        
+        GD.Print("Generated!");
         
     }
     

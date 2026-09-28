@@ -88,15 +88,14 @@ public class Dimension
         }
         
         id = GetGeneratedVoxelId(position);
-        //id = null;
         
         return id != null;
     }
     
     public bool TryGetVoxelDataAtPosition(VoxelPos position, out VoxelData voxelData)
     {
-        voxelData = TryGetVoxelIdAtPosition(position, out string id)
-            ? LoadedData.GetDataById<VoxelData>(id) : null;
+        bool exists = TryGetVoxelIdAtPosition(position, out string id);
+        voxelData = exists ? LoadedData.GetDataById<VoxelData>(id) : null;
         
         return voxelData != null;
     }

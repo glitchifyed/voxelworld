@@ -91,7 +91,8 @@ public class Chunk
 		
 		bool haveIRenderedSomething = false;
 		
-		// TODO: optimise to use _voxelsToCalculate instead. will probably save a lot of processing on empty voxels 
+		// TODO: optimise to scan only the voxels that exist
+		// Mission failed. The optimisation sucked.
 		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
 		// foreach (VoxelPos localPos in _voxelsToCalculate)
 		{
@@ -108,7 +109,7 @@ public class Chunk
 			{
 				VoxelPos nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToVoxelPos();
 				
-				// TODO: cull faces bordering non-generated chunks
+				// TODO: cull faces bordering non-generated chunks (OR MAYBE NOT?)
 				if (
 					World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
 					&& !adjacentVoxelData.Translucent
