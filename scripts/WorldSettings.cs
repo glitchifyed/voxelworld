@@ -3,12 +3,13 @@ using System;
 
 public static class WorldSettings
 {
-	public const int CHUNK_VOXEL_COUNT = 64;
-	public const int CHUNKS_TO_CONSTRUCT = 4;
-	public const int CHUNK_CALCULATION_THREADS = 8;
+	public const int CHUNK_VOXEL_COUNT = 16;
+	public const int CHUNKS_TO_CONSTRUCT = 8;
+	public const int CHUNK_CALCULATION_THREADS = 4;
+	public const int CHUNK_GENERATION_THREADS = 4;
 	
-	public const byte RENDER_DISTANCE_XZ = 4;
-	public const byte RENDER_DISTANCE_Y = 3;
+	public const byte RENDER_DISTANCE_XZ = 8;
+	public const byte RENDER_DISTANCE_Y = 4;
 	
 	// TODO: world scale
 	

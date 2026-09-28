@@ -14,6 +14,7 @@ public class Chunk
 	}
 	
 	public bool IsWithinRange;
+	public bool IsSentForCalculation;
 	
 	private readonly int?[,,] _voxels = new int?[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
 	
@@ -125,6 +126,8 @@ public class Chunk
 		
 		_calculated = true;
 		_empty = !haveIRenderedSomething;
+		
+		IsSentForCalculation = false;
 		
 		return haveIRenderedSomething;
 	}
