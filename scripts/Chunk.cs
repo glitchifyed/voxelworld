@@ -17,7 +17,7 @@ public class Chunk
 	
 	private readonly int?[,,] _voxels = new int?[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
 	
-	private readonly HashSet<VoxelPos> _voxelsToCalculate = [];
+	// private readonly HashSet<VoxelPos> _voxelsToCalculate = [];
 	
 	private readonly ArrayMesher _arrayMesher = new();
 	// private readonly Dimension _dimension;
@@ -68,6 +68,9 @@ public class Chunk
 			{
 				_voxels[localPos.X, localPos.Y, localPos.Z] = voxelData.NumericId;
 				
+				// if (voxelData.Renderable)
+				// 	_voxelsToCalculate.Add(localPos);
+				
 				_recalculate = true;
 			}
 		}
@@ -90,6 +93,7 @@ public class Chunk
 		
 		// TODO: optimise to use _voxelsToCalculate instead. will probably save a lot of processing on empty voxels 
 		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
+		// foreach (VoxelPos localPos in _voxelsToCalculate)
 		{
 			
 			VoxelPos voxelPos = localPos + GlobalPosition;
