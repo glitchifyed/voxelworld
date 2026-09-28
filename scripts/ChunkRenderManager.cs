@@ -188,7 +188,7 @@ public static class ChunkRenderManager
             if (!threadChunks.TryDequeue(out Chunk chunk))
                 break;
             
-            if (!chunk.CalculateMesh() || !chunk.IsWithinRange)
+            if (!chunk.IsWithinRange || !chunk.CalculateMesh())
                 continue;
             
             _chunksToConstruct.Enqueue(chunk);
