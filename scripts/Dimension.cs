@@ -19,8 +19,9 @@ public class Dimension
             return storedChunk;
         
         Chunk newChunk = new(position);
-        
         Chunks[position] = newChunk;
+        
+        World.Singleton.ChunksNode.AddChild(newChunk.MeshInstance);
         
         return newChunk;
     }
@@ -31,6 +32,8 @@ public class Dimension
             return;
         
         chunk.Unload();
+        
+        chunk.MeshInstance.QueueFree();
     }
     
     

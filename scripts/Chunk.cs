@@ -20,7 +20,7 @@ public class Chunk
 	private readonly HashSet<VoxelPos> _voxelsToCalculate = [];
 	
 	private readonly ArrayMesher _arrayMesher = new();
-	private readonly Dimension _dimension;
+	// private readonly Dimension _dimension;
 	
 	private bool _generated;
 	private bool _recalculate;
@@ -41,10 +41,10 @@ public class Chunk
 			MaterialOverride = WorldSettings.ChunkMeshMaterial
         };
 		
-		if (World.Singleton.GetIsMainThread())
-			World.Singleton.ChunksNode.AddChild(MeshInstance);
-		else
-			World.Singleton.ChunksNode.CallDeferred(Node.MethodName.AddChild, MeshInstance);
+		// if (World.Singleton.GetIsMainThread())
+		// 	World.Singleton.ChunksNode.AddChild(MeshInstance);
+		// else
+		// 	World.Singleton.ChunksNode.CallDeferred(Node.MethodName.AddChild, MeshInstance);
     }
 	
 	
