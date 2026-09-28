@@ -25,6 +25,11 @@ public static class ChunkRenderManager
     
     private static int _currentCalculationThread;
     
+    
+    private static int _generatedChunks;
+    private static int _calculatedChunks;
+    private static int _renderedChunks;
+    
     // TODO: Frustum culling
     
     
@@ -72,16 +77,24 @@ public static class ChunkRenderManager
         
         _chunkPosition = currentChunkPosition;
         
+        GD.Print(currentChunkPosition);
+        
         
         // Get within range
-        Queue<Chunk> currentlyWithinRendering = [];
+        Queue<Chunk> chunksToCalculate = [];
+        HashSet<Chunk> currentlyWithinRendering = [];
         
         foreach (VoxelPos renderOffset in _renderBounds)
         {
             VoxelPos chunkPosition = _chunkPosition.Value + renderOffset - _renderBoundsHalf;
             Chunk chunk = World.Singleton.CurrentDimension.GetChunkAtPosition(chunkPosition);
             
-            currentlyWithinRendering.Enqueue(chunk);
+            currentlyWithinRendering.Add(chunk);
+            
+            if (chunk.IsWithinRange && chunk.IsCalculated())
+                continue;
+            
+            chunksToCalculate.Enqueue(chunk);
             
             chunk.IsWithinRange = true;
         }
@@ -94,16 +107,20 @@ public static class ChunkRenderManager
                 if (currentlyWithinRendering.Contains(chunk))
                     continue;
                 
+                if (!chunk.IsWithinRange)
+                    continue;
+                
                 _chunksToUnload.Enqueue(chunk);
                 
                 chunk.IsWithinRange = false;
             }
         
-        _loadedChunks = currentlyWithinRendering.ToHashSet();
+        _loadedChunks = currentlyWithinRendering;
         
         
         // Cancel the current generator thread
         _chunkGeneratorTokenSource?.Cancel();
+        _chunkGeneratorTokenSource?.Dispose();
         
         // Run a new generator thread
         _chunkGeneratorTokenSource = new();
@@ -111,7 +128,7 @@ public static class ChunkRenderManager
         CancellationToken token = _chunkGeneratorTokenSource.Token;
         
         Task.Run(
-            () => GenerateChunksInVicinity(token, currentlyWithinRendering),
+            () => GenerateChunksInVicinity(token, chunksToCalculate),
             token
             );
         
@@ -148,9 +165,13 @@ public static class ChunkRenderManager
                 continue;
 
             i++;
+            
+            _renderedChunks++;
 
             chunk.ConstructMesh();
         }
+        
+        // GD.Print($"Gen: {_generatedChunks} Cal: {_calculatedChunks} Ren: {_renderedChunks}");
     }
     
     private static void RunChunkMeshCalculator(ConcurrentQueue<Chunk> threadChunks)
@@ -171,6 +192,8 @@ public static class ChunkRenderManager
             
             chunk.Generate();
             
+            _generatedChunks++;
+            
             if (!chunk.HasChangedSinceLastRender())
                 continue;
             
@@ -190,6 +213,8 @@ public static class ChunkRenderManager
             
             if (!chunk.IsWithinRange || !chunk.CalculateMesh())
                 continue;
+            
+            _calculatedChunks++;
             
             _chunksToConstruct.Enqueue(chunk);
             
