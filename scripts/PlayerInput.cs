@@ -11,7 +11,9 @@ public partial class PlayerInput : Node
 	
 	public Action<InputEvent> OnInputEnded;
 	
-	public bool EscJustPressed;
+	public bool EscJustPressed { get; private set; }
+	
+	public bool SprintHeld { get; private set; }
 
 
     public override void _Ready()
@@ -43,6 +45,8 @@ public partial class PlayerInput : Node
 		).Normalized();
 		
 		EscJustPressed = Input.IsActionJustPressed("exit");
+		
+		SprintHeld = Input.IsActionPressed("sprint");
 		
 	}
 	

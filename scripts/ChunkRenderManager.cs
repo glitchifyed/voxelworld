@@ -52,36 +52,9 @@ public static class ChunkRenderManager
         RunChunkGenerator();
         
         
-        // TODO: unload chunks. it'll probably go something like this:
-        // store constructed chunks,
-        // check constructed chunks for those which are outside the render distance,
-        // check if they've been rendered. if so, clear surfaces and arrays. if not, remove from render queue.
-        // remove from constructed chunks
+        TryUnloadChunks();
         
-        
-        while (_chunksToUnload.TryDequeue(out Chunk chunk))
-        {
-            
-            _constructedChunks.Remove(chunk);
-            
-            chunk.Unload();
-            
-        }
-        
-        
-        if (!_chunksToConstruct.IsEmpty)
-            for (int i = 0; i < WorldSettings.CHUNKS_TO_CONSTRUCT; i++)
-            {
-                if (!_chunksToConstruct.TryDequeue(out Chunk chunk))
-                    break;
-                
-                if (!chunk.IsCalculated() || !chunk.IsWithinRange || _chunksToUnload.Contains(chunk))
-                    continue;
-                
-                chunk.ConstructMesh();
-            }
-        
-        
+        TryConstructChunks();
         
     }
     
@@ -92,47 +65,29 @@ public static class ChunkRenderManager
         if (_viewpointNode == null)
             return;
         
+        // Only run again when crossing chunk borders
         VoxelPos currentChunkPosition = _viewpointNode.GlobalPosition.ToVoxelPos() / WorldSettings.CHUNK_VOXEL_COUNT;
         if (currentChunkPosition == _chunkPosition)
             return;
         
         _chunkPosition = currentChunkPosition;
         
-        _chunkGeneratorTokenSource?.Cancel();
-        _chunkGeneratorTokenSource = new();
         
-        CancellationToken token = _chunkGeneratorTokenSource.Token;
-        
-        Task.Run(
-            () => GenerateChunksInVicinity(token),
-            token
-            );
-        
-    }
-    
-    private static void RunChunkMeshCalculator(ConcurrentQueue<Chunk> threadChunks)
-    {
-        
-        while (true)
-            CalculateChunkMeshes(threadChunks);
-        
-    }
-    
-    private static void GenerateChunksInVicinity(CancellationToken token)
-    {
-        
+        // Get within range
         Queue<Chunk> currentlyWithinRendering = [];
         
         foreach (VoxelPos renderOffset in _renderBounds)
         {
             VoxelPos chunkPosition = _chunkPosition.Value + renderOffset - _renderBoundsHalf;
-            Chunk chunk = World.Singleton.CurrentDimension.GetOrGenerateChunk(chunkPosition);
+            Chunk chunk = World.Singleton.CurrentDimension.GetChunkAtPosition(chunkPosition);
             
             currentlyWithinRendering.Enqueue(chunk);
             
             chunk.IsWithinRange = true;
         }
         
+        
+        // Get outside of range
         if (_loadedChunks != null)
             foreach (Chunk chunk in _loadedChunks)
             {
@@ -146,9 +101,72 @@ public static class ChunkRenderManager
         
         _loadedChunks = currentlyWithinRendering.ToHashSet();
         
+        
+        // Cancel the current generator thread
+        _chunkGeneratorTokenSource?.Cancel();
+        
+        // Run a new generator thread
+        _chunkGeneratorTokenSource = new();
+        
+        CancellationToken token = _chunkGeneratorTokenSource.Token;
+        
+        Task.Run(
+            () => GenerateChunksInVicinity(token, currentlyWithinRendering),
+            token
+            );
+        
+    }
+    
+    private static void TryUnloadChunks()
+    {
+        while (_chunksToUnload.TryDequeue(out Chunk chunk))
+        {
+            
+            if (chunk.IsWithinRange)
+                continue;
+            
+            _constructedChunks.Remove(chunk);
+            
+            World.Singleton.CurrentDimension.UnloadChunk(chunk);
+            
+        }
+    }
+    
+    private static void TryConstructChunks()
+    {
+        if (_chunksToConstruct.IsEmpty)
+            return;
+        
+        int i = 0;
+
+        while (i < WorldSettings.CHUNKS_TO_CONSTRUCT)
+        {
+            if (!_chunksToConstruct.TryDequeue(out Chunk chunk))
+                break;
+
+            if (!chunk.IsCalculated() || !chunk.IsWithinRange || _chunksToUnload.Contains(chunk))
+                continue;
+
+            i++;
+
+            chunk.ConstructMesh();
+        }
+    }
+    
+    private static void RunChunkMeshCalculator(ConcurrentQueue<Chunk> threadChunks)
+    {
+        
+        while (true)
+            CalculateChunkMeshes(threadChunks);
+        
+    }
+    
+    private static void GenerateChunksInVicinity(CancellationToken token, Queue<Chunk> chunksToGenerate)
+    {
+        
         while (!token.IsCancellationRequested)
         {
-            if (!currentlyWithinRendering.TryDequeue(out Chunk chunk))
+            if (!chunksToGenerate.TryDequeue(out Chunk chunk))
                 break;
             
             chunk.Generate();

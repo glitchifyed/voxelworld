@@ -5,6 +5,7 @@ public partial class SpectatorCamera : Camera3D
 {
 
     [Export] private float _moveSpeed = 6f;
+    [Export] private float _sprintBonus = 2f;
     [Export] private float _lookSpeed = 1f;
 
 	private PlayerInput _playerInput = new();
@@ -48,7 +49,7 @@ public partial class SpectatorCamera : Camera3D
             + upVector * _playerInput.MoveDirection.Y
             + forwardVector * _playerInput.MoveDirection.Z)
             
-            * _moveSpeed * delta;
+            * _moveSpeed * (_playerInput.SprintHeld ? _sprintBonus : 1f) * delta;
         
     }
     

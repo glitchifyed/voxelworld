@@ -13,18 +13,24 @@ public class Dimension
     };
     
     
-    public Chunk GetOrGenerateChunk(VoxelPos position)
+    public Chunk GetChunkAtPosition(VoxelPos position)
     {
         if (Chunks.TryGetValue(position, out Chunk storedChunk))
             return storedChunk;
         
         Chunk newChunk = new(position);
         
-        // newChunk.Generate();
-        
         Chunks[position] = newChunk;
         
         return newChunk;
+    }
+    
+    public void UnloadChunk(Chunk chunk)
+    {
+        if (!Chunks.Remove(chunk.Position))
+            return;
+        
+        chunk.Unload();
     }
     
     

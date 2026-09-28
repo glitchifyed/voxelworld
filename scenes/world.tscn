@@ -33,7 +33,8 @@ shadow_enabled = true
 [node name="Camera" type="Camera3D" parent="." unique_id=589396545]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, 0)
 script = ExtResource("1_nnsk1")
-_moveSpeed = 50.0
+_moveSpeed = 10.0
+_sprintBonus = 5.0
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1147424448]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)

@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 public class Chunk
@@ -16,10 +17,13 @@ public class Chunk
 	
 	private readonly int?[,,] _voxels = new int?[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
 	
+	private readonly HashSet<VoxelPos> _voxelsToCalculate = [];
+	
 	private readonly ArrayMesher _arrayMesher = new();
 	private readonly Dimension _dimension;
 	
-	private bool _reculate;
+	private bool _generated;
+	private bool _recalculate;
 	private bool _calculated;
 	private bool _empty = true;
 	private bool _constructed;
@@ -48,35 +52,43 @@ public class Chunk
 		=> _voxels[position.X, position.Y, position.Z];
 	
 	
-	public void Generate()
+	public bool Generate()
 	{
+		
+		if (_generated)
+			return false;
+		
+		_generated = true;
+		
 		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
 		{
-			
 			var voxelPos = localPos + GlobalPosition;
 			
 			if (World.Singleton.CurrentDimension.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
 			{
 				_voxels[localPos.X, localPos.Y, localPos.Z] = voxelData.NumericId;
 				
-				_reculate = true;
+				_recalculate = true;
 			}
-			
 		}
+		
+		return true;
+		
 	}
 	
 	
 	public bool CalculateMesh()
 	{
-		if (!_reculate)
+		if (!_recalculate)
 			return false;
 		
-		_reculate = false;
+		_recalculate = false;
 		
 		_arrayMesher.ClearArrays();
 		
 		bool haveIRenderedSomething = false;
 		
+		// TODO: optimise to use _voxelsToCalculate instead. will probably save a lot of processing on empty voxels 
 		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
 		{
 			
@@ -133,12 +145,12 @@ public class Chunk
 		_constructed = false;
 		_calculated = false;
 		_empty = true;
-		_reculate = true;
+		_recalculate = true;
 	}
 	
 	
 	public bool HasChangedSinceLastRender()
-		=> _reculate;
+		=> _recalculate;
 	
 	public bool IsConstructed()
 		=> _constructed;
