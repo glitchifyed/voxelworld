@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://bak2uc8dlxp6h"]
+
+[ext_resource type="Script" uid="uid://he6brk4ytxax" path="res://Scripts/Client/Player/SpectatorCamera.cs" id="1_f555i"]
+
+[node name="SpectatorCamera" type="Camera3D" unique_id=359252546]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 50, 0)
+script = ExtResource("1_f555i")
+_moveSpeed = 10.0
+_sprintBonus = 20.0
