@@ -51,6 +51,7 @@ public readonly record struct Coordinate
     
     public readonly Vector3 ToVector3()
         => new(X, Y, Z);
+    
 
     public override readonly string ToString()
         => $"({X}, {Y}, {Z})";

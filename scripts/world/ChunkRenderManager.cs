@@ -56,7 +56,7 @@ public static class ChunkRenderManager
             return;
         
         // Only run again when crossing chunk borders
-        Coordinate currentChunkPosition = _viewpointNode.GlobalPosition.ToVoxelPos() / WorldSettings.CHUNK_VOXEL_COUNT;
+        Coordinate currentChunkPosition = _viewpointNode.GlobalPosition.ToCoordinate() / WorldSettings.CHUNK_VOXEL_COUNT;
         if (currentChunkPosition == _chunkPosition)
             return;
         

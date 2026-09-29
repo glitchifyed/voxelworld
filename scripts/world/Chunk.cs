@@ -97,7 +97,7 @@ public class Chunk
 			
 			foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
 			{
-				Coordinate nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToVoxelPos();
+				Coordinate nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToCoordinate();
 				
 				if (
 					World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
