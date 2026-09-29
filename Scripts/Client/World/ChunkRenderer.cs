@@ -23,7 +23,7 @@ public class ChunkRenderer
         Coordinate.FillBounds.FromCentre
         );
     
-    private readonly Queue<Chunk> _currentChunks = [];
+    private readonly HashSet<Chunk> _currentChunks = [];
     
     
     
@@ -57,17 +57,20 @@ public class ChunkRenderer
         
         // Unload previous chunks
         // TODO: remove multithreading? i don't think it's needed tbh
-        while (_currentChunks.TryDequeue(out Chunk chunk))
-            if (!(chunk.Position - currentChunkPosition).IsWithinBounds(_renderBounds))
-                // Endpoint.CurrentWorld.(chunk);
-            {
-                if (!Endpoint.CurrentWorld.Chunks.Remove(chunk.Position))
-                    continue;
-                
-                chunk.Reset();
-                
-                _threadedUnloadChunks.AddTask(chunk);
-            }
+        foreach (Chunk chunk in _currentChunks)
+        {
+            if ((chunk.Position - currentChunkPosition).IsWithinBounds(_renderBounds))
+                continue;
+            
+            _currentChunks.Remove(chunk);
+            
+            if (!Endpoint.CurrentWorld.Chunks.Remove(chunk.Position))
+                continue;
+            
+            chunk.Reset();
+            
+            _threadedUnloadChunks.AddTask(chunk);
+        }
         
         
         // Get currently loaded chunks
@@ -77,14 +80,14 @@ public class ChunkRenderer
             
             Chunk chunk = Endpoint.CurrentWorld.GetChunkAtPosition(position);
             
-            _currentChunks.Enqueue(chunk);
-            
             
             // Only do something if the chunk hasn't already been rendered
             if (chunk.IsWithinRenderBounds)
                 continue;
             
             chunk.IsWithinRenderBounds = true;
+            
+            _currentChunks.Add(chunk);
             
             
             if (chunk.RequiresVoxelFill())
