@@ -44,7 +44,7 @@ public readonly record struct Coordinate
         => new(X, Y, Z);
 
     public override readonly string ToString()
-        => $"{GetType().Name}({X}, {Y}, {Z})";
+        => $"({X}, {Y}, {Z})";
 
 
     
