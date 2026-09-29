@@ -5,10 +5,10 @@ using System.Threading;
 
 public class Chunk
 {
-	public readonly VoxelPos Position;
+	public readonly Coordinate Position;
 	public readonly MeshInstance3D MeshInstance;
 	
-	public VoxelPos GlobalPosition
+	public Coordinate GlobalPosition
 	{
 		get => Position * WorldSettings.CHUNK_VOXEL_COUNT;
 	}
@@ -18,7 +18,7 @@ public class Chunk
 	private readonly ArrayMesher _arrayMesher = new();
 	
 	
-	public Chunk(VoxelPos position)
+	public Chunk(Coordinate position)
 	{
 		Position = position;
 
@@ -32,13 +32,13 @@ public class Chunk
     }
 	
 	
-	public int? GetVoxelIdAtPosition(VoxelPos position)
+	public int? GetVoxelIdAtPosition(Coordinate position)
 		=> _voxels[position.X, position.Y, position.Z];
 	
 	
 	public void Generate()
 	{
-		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
+		foreach (Coordinate localPos in Coordinate.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
 		{
 			var voxelPos = localPos + GlobalPosition;
 			
@@ -55,10 +55,10 @@ public class Chunk
 		_arrayMesher.ClearArrays();
 		
 		
-		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
+		foreach (Coordinate localPos in Coordinate.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
 		{
 			
-			VoxelPos voxelPos = localPos + GlobalPosition;
+			Coordinate voxelPos = localPos + GlobalPosition;
 			
 			if (
 				!World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(voxelPos, out VoxelData voxelData)
@@ -68,7 +68,7 @@ public class Chunk
 			
 			foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
 			{
-				VoxelPos nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToVoxelPos();
+				Coordinate nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToVoxelPos();
 				
 				if (
 					World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class Dimension
 {
     
-    public readonly Dictionary<VoxelPos, Chunk> Chunks = [];
+    public readonly Dictionary<Coordinate, Chunk> Chunks = [];
     
     private readonly FastNoiseLite _generatorFastNoise = new()
     {
@@ -13,7 +13,7 @@ public class Dimension
     };
     
     
-    public Chunk GetChunkAtPosition(VoxelPos position)
+    public Chunk GetChunkAtPosition(Coordinate position)
     {
         if (Chunks.TryGetValue(position, out Chunk storedChunk))
             return storedChunk;
@@ -37,7 +37,7 @@ public class Dimension
     }
     
     
-    public string GetGeneratedVoxelId(VoxelPos position)
+    public string GetGeneratedVoxelId(Coordinate position)
     {
         float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, -10f, 20f) / 2f;
         int height = Mathf.FloorToInt(20 * heightPercent);
@@ -54,7 +54,7 @@ public class Dimension
         return "game.voxel.stone";
     }
     
-    public bool TryGetGeneratedVoxelData(VoxelPos voxelPos, out VoxelData voxelData)
+    public bool TryGetGeneratedVoxelData(Coordinate voxelPos, out VoxelData voxelData)
     {
         string generatedId = GetGeneratedVoxelId(voxelPos);
         
@@ -70,13 +70,13 @@ public class Dimension
         return voxelData != null;
     }
     
-    public bool TryGetVoxelIdAtPosition(VoxelPos position, out string id)
+    public bool TryGetVoxelIdAtPosition(Coordinate position, out string id)
     {
-        VoxelPos chunkPos = position / WorldSettings.CHUNK_VOXEL_COUNT;
+        Coordinate chunkPos = position / WorldSettings.CHUNK_VOXEL_COUNT;
         
         if (Chunks.TryGetValue(chunkPos, out Chunk chunk))
         {
-            VoxelPos localPos = position - chunkPos * WorldSettings.CHUNK_VOXEL_COUNT;
+            Coordinate localPos = position - chunkPos * WorldSettings.CHUNK_VOXEL_COUNT;
             int? voxelId = chunk.GetVoxelIdAtPosition(localPos);
             
             if (voxelId.HasValue)
@@ -92,7 +92,7 @@ public class Dimension
         return id != null;
     }
     
-    public bool TryGetVoxelDataAtPosition(VoxelPos position, out VoxelData voxelData)
+    public bool TryGetVoxelDataAtPosition(Coordinate position, out VoxelData voxelData)
     {
         bool exists = TryGetVoxelIdAtPosition(position, out string id);
         voxelData = exists ? LoadedData.GetDataById<VoxelData>(id) : null;

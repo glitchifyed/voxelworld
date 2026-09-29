@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 public static class ChunkRenderManager
 {
     
-    private static VoxelPos? _chunkPosition;
+    private static Coordinate? _chunkPosition;
     private static Node3D _viewpointNode;
     
-    private static readonly VoxelPos _renderBounds = new(WorldSettings.RENDER_DISTANCE_XZ * 2 + 1, WorldSettings.RENDER_DISTANCE_Y * 2 + 1, WorldSettings.RENDER_DISTANCE_XZ * 2 + 1, VoxelPos.VoxelEnumerator.FromCentre);
-    private static readonly VoxelPos _renderBoundsHalf = _renderBounds / 2;
+    private static readonly Coordinate _renderBounds = new(WorldSettings.RENDER_DISTANCE_XZ * 2 + 1, WorldSettings.RENDER_DISTANCE_Y * 2 + 1, WorldSettings.RENDER_DISTANCE_XZ * 2 + 1, Coordinate.VoxelEnumerator.FromCentre);
+    private static readonly Coordinate _renderBoundsHalf = _renderBounds / 2;
     
     
     public static void SetViewpointNode(Node3D node)
@@ -37,7 +37,7 @@ public static class ChunkRenderManager
             return;
         
         // Only run again when crossing chunk borders
-        VoxelPos currentChunkPosition = _viewpointNode.GlobalPosition.ToVoxelPos() / WorldSettings.CHUNK_VOXEL_COUNT;
+        Coordinate currentChunkPosition = _viewpointNode.GlobalPosition.ToVoxelPos() / WorldSettings.CHUNK_VOXEL_COUNT;
         if (currentChunkPosition == _chunkPosition)
             return;
         
