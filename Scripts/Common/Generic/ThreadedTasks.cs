@@ -21,13 +21,21 @@ public class ThreadedTasks<T>
     
     private void DequeueTasks()
     {
-        while (true)
+        try
         {
-            if (!_tasks.TryDequeue(out T task))
-                continue;
-            
-            _action(task);
+            while (true)
+            {
+                if (!_tasks.TryDequeue(out T task))
+                    continue;
+                
+                _action(task);
+            }
         }
+        catch (Exception ex)
+        {
+            GD.PushError(ex);
+        }
+        
     }
     
     public void AddTask(T task)

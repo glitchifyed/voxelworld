@@ -88,7 +88,7 @@ public class ChunkRenderer
             
             
             if (chunk.RequiresVoxelFill())
-                 _threadedVoxelFill.AddTask(chunk);
+                _threadedVoxelFill.AddTask(chunk);
         }
     }
     

@@ -17,7 +17,11 @@ public class Chunk
 	public bool IsWithinRenderBounds;
 	
 	
-	private readonly int?[,,] _voxels = new int?[GameSettings.CHUNK_VOXEL_COUNT, GameSettings.CHUNK_VOXEL_COUNT, GameSettings.CHUNK_VOXEL_COUNT];
+	private readonly int?[] _voxels = new int?[
+		GameSettings.CHUNK_VOXEL_COUNT *
+		GameSettings.CHUNK_VOXEL_COUNT *
+		GameSettings.CHUNK_VOXEL_COUNT
+		];
 	
 	private readonly ArrayMesher _arrayMesher = new();
 	
@@ -32,14 +36,18 @@ public class Chunk
 	private bool _requiresCreateMesh;
 	
 	
+	public static int GetArrayIndex(Coordinate position)
+		=> position.X + GameSettings.CHUNK_VOXEL_COUNT * (position.Y + GameSettings.CHUNK_VOXEL_COUNT * position.Z);
+	
+	
 	public Chunk(Coordinate position)
 	{
 		Position = position;
 
         MeshInstance = new()
         {
-			Name = position.ToString(),
-            Position = Position.ToVector3() * GameSettings.CHUNK_VOXEL_COUNT,
+			Name = Position.ToString(),
+            Position = GlobalPosition.ToVector3(),
 			Mesh = _arrayMesher.ArrayMesh,
 			MaterialOverride = GameSettings.ChunkMeshMaterial
         };
@@ -49,7 +57,8 @@ public class Chunk
 	
 	
 	public int? GetVoxelIdAtPosition(Coordinate position)
-		=> _voxels[position.X, position.Y, position.Z];
+		=> _voxels[GetArrayIndex(position)];
+		
 	
 	
 	public void FillVoxels()
@@ -66,12 +75,13 @@ public class Chunk
 			if (!Endpoint.CurrentWorld.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
 				continue;
 
-			_voxels[localPos.X, localPos.Y, localPos.Z] = voxelData.NumericId;
+			_voxels[GetArrayIndex(localPos)] = voxelData.NumericId;
 			
 			_requiresAddMeshData = true;
 		}
 		
 		_isVoxelFilled = true;
+		_isVoxelFilling = false;
 	}
 	
 	
