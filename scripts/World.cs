@@ -34,7 +34,7 @@ public partial class World : Node
 		LoadedData.Load();
 		
 		ChunkRenderManager.SetViewpointNode(viewportNode);
-		ChunkRenderManager.OnReady();
+		ChunkRenderManager.SetWorld(this);
 	}
 
     public override void _Process(double delta)

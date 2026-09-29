@@ -14,6 +14,9 @@ public class Chunk
 	}
 	
 	
+	public bool IsWithinRenderBounds;
+	
+	
 	private readonly int?[,,] _voxels = new int?[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
 	
 	private readonly ArrayMesher _arrayMesher = new();

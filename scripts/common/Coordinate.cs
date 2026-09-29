@@ -7,10 +7,10 @@ public readonly record struct Coordinate
     public readonly int X;
     public readonly int Y;
     public readonly int Z;
-    public readonly VoxelEnumerator Enumerator;
+    public readonly FillBounds Enumerator;
     
     
-    private static readonly Coordinate[] FloodFillNeighbours =
+    private static readonly Coordinate[] NeighbourOffset =
     [
         new(x: 1),
         new(x: -1),
@@ -23,11 +23,20 @@ public readonly record struct Coordinate
     ];
     
     
-    public Coordinate(int x = 0, int y = 0, int z = 0, VoxelEnumerator enumerator = VoxelEnumerator.Default)
+    public Coordinate(int x = 0, int y = 0, int z = 0, FillBounds enumerator = FillBounds.Default)
     {
         X = x;
         Y = y;
         Z = z;
+        
+        Enumerator = enumerator;
+    }
+    
+    public Coordinate(Coordinate coordinate, FillBounds enumerator = FillBounds.FromCentre)
+    {
+        X = coordinate.X;
+        Y = coordinate.Y;
+        Z = coordinate.Z;
         
         Enumerator = enumerator;
     }
@@ -45,6 +54,9 @@ public readonly record struct Coordinate
 
     public override readonly string ToString()
         => $"({X}, {Y}, {Z})";
+    
+    public override readonly int GetHashCode()
+        => base.GetHashCode();
 
 
     
@@ -52,7 +64,7 @@ public readonly record struct Coordinate
     {
         return Enumerator switch
         {
-            VoxelEnumerator.FromCentre => EnumerateFromCentre(this),
+            FillBounds.FromCentre => EnumerateFromCentre(this),
             
             _ => EnumerateDefault(this)
         };
@@ -68,56 +80,25 @@ public readonly record struct Coordinate
     
     public static IEnumerator<Coordinate> EnumerateFromCentre(Coordinate bounds)
     {
-        Coordinate startPosition = bounds / 2;
-        
         Queue<Coordinate> queue = [];
-        HashSet<Coordinate> alreadyVisited = [];
+        HashSet<Coordinate> hasChecked = [];
         
-        queue.Enqueue(startPosition);
-        alreadyVisited.Add(startPosition);
+        queue.Enqueue(Zero);
+        hasChecked.Add(Zero);
         
-        while (queue.Count != 0)
+        while (queue.TryDequeue(out Coordinate currentPosition))
         {
-            Coordinate currentPosition = queue.Dequeue();
-            
             yield return currentPosition;
             
-            foreach (Coordinate offset in FloodFillNeighbours)
+            foreach (Coordinate offset in NeighbourOffset)
             {
                 Coordinate position = currentPosition + offset;
                 
-                if (IsWithinBounds(position, bounds) && alreadyVisited.Add(position))
+                if (position.IsWithinBounds(bounds) && hasChecked.Add(position))
                     queue.Enqueue(position);
             }
         }
     }
-    
-    private static bool IsWithinBounds(Coordinate position, Coordinate bounds)
-        =>
-        position.X >= 0 && position.X <= bounds.X &&
-        position.Y >= 0 && position.Y <= bounds.Y &&
-        position.Z >= 0 && position.Z <= bounds.Z;
-    
-    
-    // private static void FloodFillPortion(VoxelPos bounds, Queue<VoxelPos> queue, int x, int y, int z)
-    // {
-    //     if (x < 0 || x > bounds.X || y < 0 || y > bounds.Y || z < 0 || z > bounds.Z)
-    //         return;
-        
-    //     VoxelPos position = new(x, y, z);
-        
-    //     if (queue.Contains(position))
-    //         return;
-        
-    //     queue.Enqueue(position);
-        
-    //     FloodFillPortion(bounds, queue, x + 1, y, z);
-    //     FloodFillPortion(bounds, queue, x - 1, y, z);
-    //     FloodFillPortion(bounds, queue, x, y + 1, z);
-    //     FloodFillPortion(bounds, queue, x, y - 1, z);
-    //     FloodFillPortion(bounds, queue, x, y, z + 1);
-    //     FloodFillPortion(bounds, queue, x, y, z - 1);
-    // }
     
     
     public static Coordinate operator +(Coordinate left, Coordinate right)
@@ -133,36 +114,14 @@ public readonly record struct Coordinate
         => new(Mathf.FloorToInt(left.X / right), Mathf.FloorToInt(left.Y / right), Mathf.FloorToInt(left.Z / right));
     
     
-    public readonly bool TryGetValueInArraySafely<T>(T[,,] array, out T value)
-    {
-        if (AreIndicesWithinArrayBounds(array, X, Y, Z))
-        {
-            value = array[X, Y, Z];
-            
-            return true;
-        }
-        
-        value = default;
-        
-        return false;
-    }
+    public bool IsWithinBounds(Coordinate bounds)
+        =>
+        Math.Abs(X) <= bounds.X &&
+        Math.Abs(Y) <= bounds.Y &&
+        Math.Abs(Z) <= bounds.Z;
     
     
-    private static bool AreIndicesWithinArrayBounds<T>(T[,,] array, params int[] indices)
-    {
-        for (int i = 0; i < indices.Length; i++)
-        {
-            int index = indices[i];
-            
-            if (index < 0 || index > array.GetUpperBound(i))
-                return false;
-        }
-        
-        return true;
-    }
-    
-    
-    public enum VoxelEnumerator
+    public enum FillBounds
     {
         Default,
         FromCentre
