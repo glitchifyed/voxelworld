@@ -31,6 +31,7 @@ public class ChunkRenderer
     {
         _threadedVoxelFill = new(GameSettings.CHUNK_FILL_THREADS, SequencedVoxelFill);
         _threadedMeshData = new(GameSettings.CHUNK_MESH_THREADS, SequencedMeshData);
+        _threadedUnloadChunks = new(1, SequencedUnloadChunk);
     }
     
     public void OnProcess()
@@ -58,14 +59,26 @@ public class ChunkRenderer
         // TODO: multithread this?
         while (_currentChunks.TryDequeue(out Chunk chunk))
             if (!(chunk.Position - currentChunkPosition).IsWithinBounds(_renderBounds))
-                Endpoint.CurrentWorld.UnloadChunk(chunk);
+                // Endpoint.CurrentWorld.UnloadChunk(chunk);
+            {
+                if (!Endpoint.CurrentWorld.Chunks.Remove(chunk.Position))
+                    continue;
+                
+                chunk.Reset();
+                
+                _threadedUnloadChunks.AddTask(chunk);
+            }
+        
         
         // Get currently loaded chunks
-        foreach (Coordinate position in _renderBounds)
+        foreach (Coordinate offset in _renderBounds)
         {
-            Chunk chunk = Endpoint.CurrentWorld.GetChunkAtPosition(currentChunkPosition + position);
+            var position = currentChunkPosition + offset;
+            
+            Chunk chunk = Endpoint.CurrentWorld.GetChunkAtPosition(position);
             
             _currentChunks.Enqueue(chunk);
+            
             
             // Only do something if the chunk hasn't already been rendered
             if (chunk.IsWithinRenderBounds)
@@ -75,7 +88,7 @@ public class ChunkRenderer
             
             
             if (chunk.RequiresVoxelFill())
-                _threadedVoxelFill.AddTask(chunk);
+                 _threadedVoxelFill.AddTask(chunk);
         }
     }
     
@@ -113,6 +126,16 @@ public class ChunkRenderer
         
         if (chunk.RequiresCreateMesh())
             _chunksMeshesToCreate.Enqueue(chunk);
+    }
+    
+    private void SequencedUnloadChunk(Chunk chunk)
+    {
+        if (chunk.IsWithinRenderBounds)
+            return;
+        
+        chunk.Clear();
+        
+        chunk.MeshInstance.QueueFree();
     }
     
 }

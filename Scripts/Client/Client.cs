@@ -8,7 +8,7 @@ public partial class Client : Endpoint
     public static Client Instance { get; private set; }
 
 
-    public static Node3D Viewpoint { get; private set; }
+    public static Camera3D Viewpoint { get; private set; }
     
     
     private readonly ChunkRenderer _chunkRenderer = new();
@@ -22,7 +22,7 @@ public partial class Client : Endpoint
         Instance = this;
         
         
-        Viewpoint = (Node3D) GD.Load<PackedScene>("res://Assets/Prefabs/SpectatorCamera.tscn").Instantiate();
+        Viewpoint = (Camera3D) GD.Load<PackedScene>("res://Assets/Prefabs/SpectatorCamera.tscn").Instantiate();
         AddChild(Viewpoint);
         
         

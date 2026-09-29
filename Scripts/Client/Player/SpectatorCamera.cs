@@ -57,7 +57,12 @@ public partial class SpectatorCamera : Camera3D
         if (Input.MouseMode != Input.MouseModeEnum.Captured || inputEvent is not InputEventMouseMotion)
             return;
         
-        _playerRotation += Client.PlayerInput.MouseDelta * _lookSpeed * 0.5f;
+        var newRotation = _playerRotation + Client.PlayerInput.MouseDelta * (_lookSpeed * 0.5f);
+        
+        _playerRotation = new Vector2(
+            newRotation.X,
+            Mathf.Clamp(newRotation.Y, -90, 90)
+        );
         
         RotationDegrees = new Vector3(
             -_playerRotation.Y,

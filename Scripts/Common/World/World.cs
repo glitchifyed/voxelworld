@@ -26,15 +26,16 @@ public class World
         return newChunk;
     }
     
-    public void UnloadChunk(Chunk chunk)
-    {
-        if (!Chunks.Remove(chunk.Position))
-            return;
+    // public void UnloadChunk(Chunk chunk)
+    // {
+    //     if (!Chunks.Remove(chunk.Position))
+    //         return;
         
-        chunk.Reset();
+    //     chunk.Clear();
+    //     chunk.Reset();
         
-        chunk.MeshInstance.QueueFree();
-    }
+    //     chunk.MeshInstance.QueueFree();
+    // }
     
     
     // public string GetGeneratedVoxelId(Coordinate position)

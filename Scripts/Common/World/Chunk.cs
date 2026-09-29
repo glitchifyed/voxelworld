@@ -130,11 +130,14 @@ public class Chunk
 		_isCreatingMesh = false;
 	}
 	
-	public void Reset()
+	public void Clear()
 	{
 		_arrayMesher.ClearArrays();
 		_arrayMesher.ClearSurfaces();
-		
+	}
+	
+	public void Reset()
+	{
 		_isVoxelFilling = false;
 		_isVoxelFilled = false;
 		
