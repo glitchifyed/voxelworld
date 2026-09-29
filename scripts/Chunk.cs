@@ -13,21 +13,9 @@ public class Chunk
 		get => Position * WorldSettings.CHUNK_VOXEL_COUNT;
 	}
 	
-	public bool IsWithinRange;
-	public bool IsSentForCalculation;
-	
 	private readonly int?[,,] _voxels = new int?[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
 	
-	// private readonly HashSet<VoxelPos> _voxelsToCalculate = [];
-	
 	private readonly ArrayMesher _arrayMesher = new();
-	// private readonly Dimension _dimension;
-	
-	private bool _generated;
-	private bool _recalculate;
-	private bool _calculated;
-	private bool _empty = true;
-	private bool _constructed;
 	
 	
 	public Chunk(VoxelPos position)
@@ -41,11 +29,6 @@ public class Chunk
 			Mesh = _arrayMesher.ArrayMesh,
 			MaterialOverride = WorldSettings.ChunkMeshMaterial
         };
-		
-		// if (World.Singleton.GetIsMainThread())
-		// 	World.Singleton.ChunksNode.AddChild(MeshInstance);
-		// else
-		// 	World.Singleton.ChunksNode.CallDeferred(Node.MethodName.AddChild, MeshInstance);
     }
 	
 	
@@ -53,14 +36,8 @@ public class Chunk
 		=> _voxels[position.X, position.Y, position.Z];
 	
 	
-	public bool Generate()
+	public void Generate()
 	{
-		
-		if (_generated)
-			return false;
-		
-		_generated = true;
-		
 		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
 		{
 			var voxelPos = localPos + GlobalPosition;
@@ -68,34 +45,17 @@ public class Chunk
 			if (World.Singleton.CurrentDimension.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
 			{
 				_voxels[localPos.X, localPos.Y, localPos.Z] = voxelData.NumericId;
-				
-				// if (voxelData.Renderable)
-				// 	_voxelsToCalculate.Add(localPos);
-				
-				_recalculate = true;
 			}
 		}
-		
-		return true;
-		
 	}
 	
 	
-	public bool CalculateMesh()
+	public void AddMeshData()
 	{
-		if (!_recalculate)
-			return false;
-		
-		_recalculate = false;
-		
 		_arrayMesher.ClearArrays();
 		
-		bool haveIRenderedSomething = false;
 		
-		// TODO: optimise to scan only the voxels that exist
-		// Mission failed. The optimisation sucked.
 		foreach (VoxelPos localPos in VoxelPos.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
-		// foreach (VoxelPos localPos in _voxelsToCalculate)
 		{
 			
 			VoxelPos voxelPos = localPos + GlobalPosition;
@@ -110,7 +70,6 @@ public class Chunk
 			{
 				VoxelPos nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToVoxelPos();
 				
-				// TODO: cull faces bordering non-generated chunks (OR MAYBE NOT?)
 				if (
 					World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
 					&& !adjacentVoxelData.Translucent
@@ -118,52 +77,21 @@ public class Chunk
 					continue;
 				
 				_arrayMesher.AddFaceQuad(cubeFace, localPos.ToVector3(), voxelData.ColorTemp);
-				
-				haveIRenderedSomething = true;
 			}
 			
 		}
-		
-		_calculated = true;
-		_empty = !haveIRenderedSomething;
-		
-		IsSentForCalculation = false;
-		
-		return haveIRenderedSomething;
 	}
 	
-	public bool ConstructMesh()
+	public void CreateMesh()
 	{
-		if (_constructed || _empty)
-			return false;
-		
-		_constructed = true;
-		
 		_arrayMesher.ClearSurfaces();
 		_arrayMesher.AddSurfaces();
-		
-		return true;
 	}
 	
 	public void Unload()
 	{
 		_arrayMesher.ClearArrays();
 		_arrayMesher.ClearSurfaces();
-	
-		_constructed = false;
-		_calculated = false;
-		_empty = true;
-		_recalculate = true;
 	}
-	
-	
-	public bool HasChangedSinceLastRender()
-		=> _recalculate;
-	
-	public bool IsConstructed()
-		=> _constructed;
-	
-	public bool IsCalculated()
-		=> _calculated;
 	
 }
