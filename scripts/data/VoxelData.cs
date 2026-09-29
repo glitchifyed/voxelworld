@@ -7,6 +7,6 @@ public class VoxelData : GenericData
     public bool Translucent = false;
     public Color ColorTemp = Color.FromHsv(0, 0, 1);
     
-    public VoxelData(string name, string id) : base(name, id) { }
+    public VoxelData(string id, string langId = null) : base(id, langId) { }
 
 }
