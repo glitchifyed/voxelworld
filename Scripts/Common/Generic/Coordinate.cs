@@ -32,7 +32,7 @@ public readonly record struct Coordinate
         Enumerator = enumerator;
     }
     
-    public Coordinate(Coordinate coordinate, FillBounds enumerator = FillBounds.FromCentre)
+    public Coordinate(Coordinate coordinate, FillBounds enumerator = FillBounds.Default)
     {
         X = coordinate.X;
         Y = coordinate.Y;

@@ -37,21 +37,29 @@ public class World
     }
     
     
+    // public string GetGeneratedVoxelId(Coordinate position)
+    // {
+    //     float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, -10f, 20f) / 2f;
+    //     int height = Mathf.FloorToInt(20 * heightPercent);
+        
+    //     if (position.Y > height)
+    //         return null;
+        
+    //     if (position.Y == height)
+    //         return "game.voxel.grass";
+        
+    //     if (position.Y >= height - 3)
+    //         return "game.voxel.dirt";
+        
+    //     return "game.voxel.stone";
+    // }
+    
     public string GetGeneratedVoxelId(Coordinate position)
     {
-        float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, -10f, 20f) / 2f;
-        int height = Mathf.FloorToInt(20 * heightPercent);
+        if (position.Y < 0)
+            return "game.voxel.stone";
         
-        if (position.Y > height)
-            return null;
-        
-        if (position.Y == height)
-            return "game.voxel.grass";
-        
-        if (position.Y >= height - 3)
-            return "game.voxel.dirt";
-        
-        return "game.voxel.stone";
+        return null;
     }
     
     public bool TryGetGeneratedVoxelData(Coordinate voxelPos, out VoxelData voxelData)
