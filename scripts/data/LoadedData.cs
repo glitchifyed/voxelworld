@@ -14,9 +14,9 @@ public static class LoadedData
         GenericData.Reset();
         
         // TODO: Load data from JSON files
-        Add(new VoxelData("Stone", "game.voxel.stone") { ColorTemp = Color.FromHsv(0, 0, 0.7f) });
-        Add(new VoxelData("Grass", "game.voxel.grass") { ColorTemp = Color.FromHsv(0.28f, 0.8f, 0.8f) });
-        Add(new VoxelData("Grass", "game.voxel.dirt") { ColorTemp = Colors.Brown });
+        Add(new VoxelData("game.voxel.stone") { ColorTemp = Color.FromHsv(0, 0, 0.7f) });
+        Add(new VoxelData("game.voxel.grass") { ColorTemp = Color.FromHsv(0.28f, 0.8f, 0.8f) });
+        Add(new VoxelData("game.voxel.dirt") { ColorTemp = Colors.Brown });
     }
     
     
@@ -35,6 +35,9 @@ public static class LoadedData
         
         return null;
     }
+    
+    public static T GetDataByNumericId<T>(int id) where T : GenericData
+        => GetDataById<T>(GenericData.GetIdFromNumeric(id));
     
     public static GenericData GetDataById(string id)
         => GetDataById<GenericData>(id);
