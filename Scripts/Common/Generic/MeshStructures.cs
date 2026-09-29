@@ -51,22 +51,42 @@ public class MeshStructures
     
     public static readonly Vector3[] CubeFaceNormals = [
 		// Front
-		new Vector3(0, 0, -1),
+		new(0, 0, -1),
 
 		// Back
-		new Vector3(0, 0, 1),
+		new(0, 0, 1),
 
 		// Right
-        new Vector3(1, 0, 0),
+        new(1, 0, 0),
 		
 		// Left
-        new Vector3(-1, 0, 0),
+        new(-1, 0, 0),
 		
 		// Top
-        new Vector3(0, 1, 0),
+        new(0, 1, 0),
 
 		// Bottom
-        new Vector3(0, -1, 0),
+        new(0, -1, 0),
+	];
+	
+	public static readonly Coordinate[] CubeFaceOffsets = [
+		// Front
+		new(z: -1),
+
+		// Back
+		new(z: 1),
+
+		// Right
+        new(1),
+		
+		// Left
+        new(-1),
+		
+		// Top
+        new(y: 1),
+
+		// Bottom
+        new(y: -1),
 	];
 	
 }

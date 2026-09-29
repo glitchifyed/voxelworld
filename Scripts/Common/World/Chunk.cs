@@ -118,9 +118,11 @@ public class Chunk
 			
 			Coordinate voxelPos = localPos + GlobalPosition;
 			
-			foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
+			// foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
+			// foreach (Coordinate faceOffset in MeshStructures.CubeFaceOffsets)
+			for (int cubeFaceId = 0; cubeFaceId < MeshStructures.CubeFaceOffsets.Length; cubeFaceId++)
 			{
-				Coordinate nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToCoordinate();
+				Coordinate nextPos = voxelPos + MeshStructures.CubeFaceOffsets[cubeFaceId];
 				
 				if (
 					Endpoint.CurrentWorld.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
@@ -128,7 +130,7 @@ public class Chunk
 					)
 					continue;
 				
-				_arrayMesher.AddFaceQuad(cubeFace, localPos.ToVector3(), voxelData.ColorTemp);
+				_arrayMesher.AddQuad(cubeFaceId, localPos.ToVector3(), voxelData.ColorTemp);
 				
 				_requiresCreateMesh = true;
 			}

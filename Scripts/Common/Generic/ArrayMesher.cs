@@ -24,18 +24,20 @@ public class ArrayMesher
 	}
 
 
-	public void AddFaceQuad(CubeFace cubeFace, Vector3 offset, Color color)
+	public void AddQuad(int cubeFaceId, Vector3 offset, Color color)
 	{
-		var faceId = (int)cubeFace;
-		Vector3 normal = MeshStructures.CubeFaceNormals[faceId];
+		Vector3 normal = MeshStructures.CubeFaceNormals[cubeFaceId];
 		
-		foreach (var index in MeshStructures.CubeFaceIndices[faceId])
+		foreach (var index in MeshStructures.CubeFaceIndices[cubeFaceId])
 		{
 			_vertices.Add(MeshStructures.CubeVertices[index] + offset);
 			_normals.Add(normal);
 			_colors.Add(color);
 		}
 	}
+
+	public void AddQuad(CubeFace cubeFace, Vector3 offset, Color color)
+		=> AddQuad((int)cubeFace, offset, color);
 	
 
 	public void ClearArrays()

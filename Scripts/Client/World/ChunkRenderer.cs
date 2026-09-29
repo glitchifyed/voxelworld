@@ -56,10 +56,10 @@ public class ChunkRenderer
         
         
         // Unload previous chunks
-        // TODO: multithread this?
+        // TODO: remove multithreading? i don't think it's needed tbh
         while (_currentChunks.TryDequeue(out Chunk chunk))
             if (!(chunk.Position - currentChunkPosition).IsWithinBounds(_renderBounds))
-                // Endpoint.CurrentWorld.UnloadChunk(chunk);
+                // Endpoint.CurrentWorld.(chunk);
             {
                 if (!Endpoint.CurrentWorld.Chunks.Remove(chunk.Position))
                     continue;
