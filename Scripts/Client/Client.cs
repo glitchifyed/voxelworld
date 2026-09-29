@@ -24,6 +24,9 @@ public partial class Client : Endpoint
         
         Viewpoint = (Node3D) GD.Load<PackedScene>("res://Assets/Prefabs/SpectatorCamera.tscn").Instantiate();
         AddChild(Viewpoint);
+        
+        
+        _chunkRenderer.OnReady();
     }
 
     public override void _Process(double delta)

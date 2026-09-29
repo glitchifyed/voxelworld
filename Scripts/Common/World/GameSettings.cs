@@ -5,8 +5,8 @@ public static class GameSettings
 {
 	public const int CHUNK_VOXEL_COUNT = 16;
 	public const int CHUNKS_TO_CONSTRUCT = 8;
-	public const int CHUNK_CALCULATION_THREADS = 4;
-	public const int CHUNK_GENERATION_THREADS = 4;
+	public const int CHUNK_MESH_THREADS = 4;
+	public const int CHUNK_FILL_THREADS = 4;
 	
 	public const byte RENDER_DISTANCE_XZ = 8;
 	public const byte RENDER_DISTANCE_Y = 4;

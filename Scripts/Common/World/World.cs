@@ -31,7 +31,7 @@ public class World
         if (!Chunks.Remove(chunk.Position))
             return;
         
-        chunk.Unload();
+        chunk.Reset();
         
         chunk.MeshInstance.QueueFree();
     }

@@ -43,6 +43,8 @@ public class Chunk
 			Mesh = _arrayMesher.ArrayMesh,
 			MaterialOverride = GameSettings.ChunkMeshMaterial
         };
+		
+		Reset();
     }
 	
 	
@@ -128,20 +130,31 @@ public class Chunk
 		_isCreatingMesh = false;
 	}
 	
-	public void Unload()
+	public void Reset()
 	{
 		_arrayMesher.ClearArrays();
 		_arrayMesher.ClearSurfaces();
+		
+		_isVoxelFilling = false;
+		_isVoxelFilled = false;
+		
+		_isAddingMeshData = false;
+		_isCreatingMesh = false;
+		
+		_requiresAddMeshData = false;
+		_requiresCreateMesh = false;
+		
+		IsWithinRenderBounds = false;
 	}
 	
 	
 	public bool RequiresVoxelFill()
-		=> !_isVoxelFilled && !_isVoxelFilling;
+		=> IsWithinRenderBounds && !_isVoxelFilled && !_isVoxelFilling;
 	
 	public bool RequiresMeshData()
-		=> _requiresAddMeshData;
+		=> IsWithinRenderBounds && _requiresAddMeshData;
 	
 	public bool RequiresCreateMesh()
-		=> _requiresCreateMesh;
+		=> IsWithinRenderBounds && _requiresCreateMesh;
 	
 }
