@@ -10,6 +10,7 @@ public class ChunkRenderer
     
     private ThreadedTasks<Chunk> _threadedVoxelFill;
     private ThreadedTasks<Chunk> _threadedMeshData;
+    private ThreadedTasks<Chunk> _threadedUnloadChunks;
     
     private readonly ConcurrentQueue<Chunk> _chunksMeshesToCreate = [];
     
@@ -53,16 +54,20 @@ public class ChunkRenderer
         _chunkPosition = currentChunkPosition;
         
         
+        // Unload previous chunks
+        // TODO: multithread this?
         while (_currentChunks.TryDequeue(out Chunk chunk))
             if (!(chunk.Position - currentChunkPosition).IsWithinBounds(_renderBounds))
                 Endpoint.CurrentWorld.UnloadChunk(chunk);
         
+        // Get currently loaded chunks
         foreach (Coordinate position in _renderBounds)
         {
             Chunk chunk = Endpoint.CurrentWorld.GetChunkAtPosition(currentChunkPosition + position);
             
             _currentChunks.Enqueue(chunk);
             
+            // Only do something if the chunk hasn't already been rendered
             if (chunk.IsWithinRenderBounds)
                 continue;
             
@@ -74,17 +79,21 @@ public class ChunkRenderer
         }
     }
     
+    // Run on the main thread. Instructs ArrayMeshes to construct geometry.
     private void RunCreateMeshes()
     {
-        while (_chunksMeshesToCreate.TryDequeue(out Chunk chunk))
+        for (int i = 0; i < GameSettings.MAX_CHUNK_MESHES_PER_FRAME; i++)
         {
+            if (!_chunksMeshesToCreate.TryDequeue(out Chunk chunk))
+                break;
+            
             if (chunk.RequiresCreateMesh())
                 chunk.CreateMesh();
         }
     }
     
     
-    public void SequencedVoxelFill(Chunk chunk)
+    private void SequencedVoxelFill(Chunk chunk)
     {
         if (!chunk.RequiresVoxelFill())
             return;
@@ -95,7 +104,7 @@ public class ChunkRenderer
             _threadedMeshData.AddTask(chunk);
     }
     
-    public void SequencedMeshData(Chunk chunk)
+    private void SequencedMeshData(Chunk chunk)
     {
         if (!chunk.RequiresMeshData())
             return;
