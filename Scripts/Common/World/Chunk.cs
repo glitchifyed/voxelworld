@@ -61,7 +61,7 @@ public class Chunk
 		{
 			var voxelPos = localPos + GlobalPosition;
 			
-			if (!Universe.Singleton.CurrentWorld.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
+			if (!Endpoint.CurrentWorld.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
 				continue;
 
 			_voxels[localPos.X, localPos.Y, localPos.Z] = voxelData.NumericId;
@@ -90,7 +90,7 @@ public class Chunk
 			Coordinate voxelPos = localPos + GlobalPosition;
 			
 			if (
-				!Universe.Singleton.CurrentWorld.TryGetVoxelDataAtPosition(voxelPos, out VoxelData voxelData)
+				!Endpoint.CurrentWorld.TryGetVoxelDataAtPosition(voxelPos, out VoxelData voxelData)
 				|| !voxelData.Renderable
 				)
 				continue;
@@ -100,7 +100,7 @@ public class Chunk
 				Coordinate nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToCoordinate();
 				
 				if (
-					Universe.Singleton.CurrentWorld.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
+					Endpoint.CurrentWorld.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
 					&& !adjacentVoxelData.Translucent
 					)
 					continue;

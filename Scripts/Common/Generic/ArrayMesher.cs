@@ -37,12 +37,6 @@ public class ArrayMesher
 		}
 	}
 	
-	public void AddCube(Vector3 offset)
-	{
-		foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
-			AddFaceQuad(cubeFace, offset, Colors.White);
-	}
-	
 
 	public void ClearArrays()
 	{

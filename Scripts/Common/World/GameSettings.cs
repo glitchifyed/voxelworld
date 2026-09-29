@@ -18,6 +18,6 @@ public static class GameSettings
 	
 	public static void Load()
 	{
-		ChunkMeshMaterial = GD.Load<Material>("res://materials/chunk_material.tres");
+		ChunkMeshMaterial = GD.Load<Material>("res://Assets/Materials/ChunkMaterial.tres");
 	}
 }
