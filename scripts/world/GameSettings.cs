@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public static class WorldSettings
+public static class GameSettings
 {
 	public const int CHUNK_VOXEL_COUNT = 16;
 	public const int CHUNKS_TO_CONSTRUCT = 8;
@@ -16,7 +16,7 @@ public static class WorldSettings
 	public static Material ChunkMeshMaterial { get; private set; }
 	
 	
-	public static void LoadWorldSettings()
+	public static void Load()
 	{
 		ChunkMeshMaterial = GD.Load<Material>("res://materials/chunk_material.tres");
 	}

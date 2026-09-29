@@ -7,17 +7,17 @@ using System.Runtime.InteropServices.Marshalling;
 using System.Threading;
 using System.Threading.Tasks;
 
-public static class ChunkRenderManager
+public static class ChunkRenderer
 {
     
     private static Coordinate? _chunkPosition;
     private static Node3D _viewpointNode;
-    private static World _world;
+    private static Universe _universe;
     
     private static readonly Coordinate _renderBounds = new(
-        WorldSettings.RENDER_DISTANCE_XZ,
-        WorldSettings.RENDER_DISTANCE_Y,
-        WorldSettings.RENDER_DISTANCE_XZ,
+        GameSettings.RENDER_DISTANCE_XZ,
+        GameSettings.RENDER_DISTANCE_Y,
+        GameSettings.RENDER_DISTANCE_XZ,
         
         Coordinate.FillBounds.FromCentre
         );
@@ -25,8 +25,8 @@ public static class ChunkRenderManager
     private static readonly Queue<Chunk> _currentChunks = [];
     
     
-    private static Dimension CurrentDimension {
-        get => _world.CurrentDimension;
+    private static World CurrentWorld {
+        get => _universe.CurrentWorld;
     }
     
     
@@ -35,8 +35,8 @@ public static class ChunkRenderManager
     public static void SetViewpointNode(Node3D node)
         => _viewpointNode = node;
     
-    public static void SetWorld(World world)
-        => _world = world;
+    public static void SetWorld(Universe world)
+        => _universe = world;
     
     public static void OnProcess()
     {
@@ -52,11 +52,11 @@ public static class ChunkRenderManager
     private static void RunChunkScanner()
     {
         
-        if (_viewpointNode == null || _world == null)
+        if (_viewpointNode == null || _universe == null)
             return;
         
         // Only run again when crossing chunk borders
-        Coordinate currentChunkPosition = _viewpointNode.GlobalPosition.ToCoordinate() / WorldSettings.CHUNK_VOXEL_COUNT;
+        Coordinate currentChunkPosition = _viewpointNode.GlobalPosition.ToCoordinate() / GameSettings.CHUNK_VOXEL_COUNT;
         if (currentChunkPosition == _chunkPosition)
             return;
         
@@ -65,11 +65,11 @@ public static class ChunkRenderManager
         
         while (_currentChunks.TryDequeue(out Chunk chunk))
             if (!chunk.Position.IsWithinBounds(_renderBounds))
-                CurrentDimension.UnloadChunk(chunk);
+                CurrentWorld.UnloadChunk(chunk);
         
         foreach (Coordinate position in _renderBounds)
         {
-            Chunk chunk = CurrentDimension.GetChunkAtPosition(position);
+            Chunk chunk = CurrentWorld.GetChunkAtPosition(position);
             
             
         }

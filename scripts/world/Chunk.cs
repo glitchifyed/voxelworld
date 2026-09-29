@@ -10,14 +10,14 @@ public class Chunk
 	
 	public Coordinate GlobalPosition
 	{
-		get => Position * WorldSettings.CHUNK_VOXEL_COUNT;
+		get => Position * GameSettings.CHUNK_VOXEL_COUNT;
 	}
 	
 	
 	public bool IsWithinRenderBounds;
 	
 	
-	private readonly int?[,,] _voxels = new int?[WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT, WorldSettings.CHUNK_VOXEL_COUNT];
+	private readonly int?[,,] _voxels = new int?[GameSettings.CHUNK_VOXEL_COUNT, GameSettings.CHUNK_VOXEL_COUNT, GameSettings.CHUNK_VOXEL_COUNT];
 	
 	private readonly ArrayMesher _arrayMesher = new();
 	
@@ -39,9 +39,9 @@ public class Chunk
         MeshInstance = new()
         {
 			Name = position.ToString(),
-            Position = Position.ToVector3() * WorldSettings.CHUNK_VOXEL_COUNT,
+            Position = Position.ToVector3() * GameSettings.CHUNK_VOXEL_COUNT,
 			Mesh = _arrayMesher.ArrayMesh,
-			MaterialOverride = WorldSettings.ChunkMeshMaterial
+			MaterialOverride = GameSettings.ChunkMeshMaterial
         };
     }
 	
@@ -57,11 +57,11 @@ public class Chunk
 		
 		_isVoxelFilling = true;
 		
-		foreach (Coordinate localPos in Coordinate.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
+		foreach (Coordinate localPos in Coordinate.OnAllAxes(GameSettings.CHUNK_VOXEL_COUNT))
 		{
 			var voxelPos = localPos + GlobalPosition;
 			
-			if (!World.Singleton.CurrentDimension.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
+			if (!Universe.Singleton.CurrentWorld.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
 				continue;
 
 			_voxels[localPos.X, localPos.Y, localPos.Z] = voxelData.NumericId;
@@ -85,12 +85,12 @@ public class Chunk
 		_arrayMesher.ClearArrays();
 		
 		
-		foreach (Coordinate localPos in Coordinate.OnAllAxes(WorldSettings.CHUNK_VOXEL_COUNT))
+		foreach (Coordinate localPos in Coordinate.OnAllAxes(GameSettings.CHUNK_VOXEL_COUNT))
 		{
 			Coordinate voxelPos = localPos + GlobalPosition;
 			
 			if (
-				!World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(voxelPos, out VoxelData voxelData)
+				!Universe.Singleton.CurrentWorld.TryGetVoxelDataAtPosition(voxelPos, out VoxelData voxelData)
 				|| !voxelData.Renderable
 				)
 				continue;
@@ -100,7 +100,7 @@ public class Chunk
 				Coordinate nextPos = voxelPos + MeshStructures.CubeFaceNormals[(int)cubeFace].ToCoordinate();
 				
 				if (
-					World.Singleton.CurrentDimension.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
+					Universe.Singleton.CurrentWorld.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
 					&& !adjacentVoxelData.Translucent
 					)
 					continue;
