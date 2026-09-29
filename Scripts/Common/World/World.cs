@@ -26,17 +26,6 @@ public class World
         return newChunk;
     }
     
-    // public void UnloadChunk(Chunk chunk)
-    // {
-    //     if (!Chunks.Remove(chunk.Position))
-    //         return;
-        
-    //     chunk.Clear();
-    //     chunk.Reset();
-        
-    //     chunk.MeshInstance.QueueFree();
-    // }
-    
     
     // public string GetGeneratedVoxelId(Coordinate position)
     // {
@@ -83,7 +72,7 @@ public class World
     {
         Coordinate chunkPos = position / GameSettings.CHUNK_VOXEL_COUNT;
         
-        if (Chunks.TryGetValue(chunkPos, out Chunk chunk))
+        if (Chunks.TryGetValue(chunkPos, out Chunk chunk) && chunk != null)
         {
             Coordinate localPos = position - chunkPos * GameSettings.CHUNK_VOXEL_COUNT;
             int? voxelId = chunk.GetVoxelIdAtPosition(localPos);

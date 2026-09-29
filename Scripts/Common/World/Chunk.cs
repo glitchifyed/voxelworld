@@ -58,6 +58,17 @@ public class Chunk
 	
 	public int? GetVoxelIdAtPosition(Coordinate position)
 		=> _voxels[GetArrayIndex(position)];
+	
+	public bool TryGetVoxelDataAtPosition(Coordinate position, out VoxelData voxelData)
+	{
+		int? id = GetVoxelIdAtPosition(position);
+		
+		voxelData = id.HasValue ?
+			LoadedData.GetDataById<VoxelData>(GenericData.GetIdFromNumeric(id.Value)) :
+			null;
+		
+		return voxelData != null;
+	}
 		
 	
 	
@@ -99,13 +110,13 @@ public class Chunk
 		
 		foreach (Coordinate localPos in Coordinate.OnAllAxes(GameSettings.CHUNK_VOXEL_COUNT))
 		{
-			Coordinate voxelPos = localPos + GlobalPosition;
-			
 			if (
-				!Endpoint.CurrentWorld.TryGetVoxelDataAtPosition(voxelPos, out VoxelData voxelData)
+				!TryGetVoxelDataAtPosition(localPos, out VoxelData voxelData)
 				|| !voxelData.Renderable
 				)
 				continue;
+			
+			Coordinate voxelPos = localPos + GlobalPosition;
 			
 			foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
 			{
