@@ -10,7 +10,7 @@ public class Chunk
 	
 	public Coordinate GlobalPosition
 	{
-		get => Position * GameSettings.CHUNK_VOXEL_COUNT;
+		get => Position * GameSettings.CHUNK_VOXEL_SIZE;
 	}
 	
 	
@@ -18,8 +18,6 @@ public class Chunk
 	
 	
 	private readonly int?[] _voxels = new int?[
-		GameSettings.CHUNK_VOXEL_COUNT *
-		GameSettings.CHUNK_VOXEL_COUNT *
 		GameSettings.CHUNK_VOXEL_COUNT
 		];
 	
@@ -37,7 +35,18 @@ public class Chunk
 	
 	
 	public static int GetArrayIndex(Coordinate position)
-		=> position.X + GameSettings.CHUNK_VOXEL_COUNT * (position.Y + GameSettings.CHUNK_VOXEL_COUNT * position.Z);
+		=> position.X + GameSettings.CHUNK_VOXEL_SIZE * (position.Y + GameSettings.CHUNK_VOXEL_SIZE * position.Z);
+	
+	public static Coordinate GetArrayPosition(int index)
+	{
+		int reduced = index / GameSettings.CHUNK_VOXEL_SIZE;
+		
+		int z = reduced / GameSettings.CHUNK_VOXEL_SIZE;
+		int y = reduced - GameSettings.CHUNK_VOXEL_SIZE * z;
+		int x = index - GameSettings.CHUNK_VOXEL_SIZE * (y + GameSettings.CHUNK_VOXEL_SIZE * z);
+		
+		return new(x, y, z);
+	}
 	
 	
 	public Chunk(Coordinate position)
@@ -59,9 +68,9 @@ public class Chunk
 	public int? GetVoxelIdAtPosition(Coordinate position)
 		=> _voxels[GetArrayIndex(position)];
 	
-	public bool TryGetVoxelDataAtPosition(Coordinate position, out VoxelData voxelData)
+	public bool TryGetVoxelDataAtPosition(int index, out VoxelData voxelData)
 	{
-		int? id = GetVoxelIdAtPosition(position);
+		int? id = _voxels[index];
 		
 		voxelData = id.HasValue ?
 			LoadedData.GetDataById<VoxelData>(GenericData.GetIdFromNumeric(id.Value)) :
@@ -69,6 +78,9 @@ public class Chunk
 		
 		return voxelData != null;
 	}
+	
+	// public bool TryGetVoxelDataAtPosition(Coordinate position, out VoxelData voxelData)
+	// 	=> TryGetVoxelDataAtPosition(GetArrayIndex(position), out voxelData);
 		
 	
 	
@@ -79,14 +91,14 @@ public class Chunk
 		
 		_isVoxelFilling = true;
 		
-		foreach (Coordinate localPos in Coordinate.OnAllAxes(GameSettings.CHUNK_VOXEL_COUNT))
+		for (int index = 0; index < GameSettings.CHUNK_VOXEL_COUNT; index++)
 		{
-			var voxelPos = localPos + GlobalPosition;
+			var voxelPos = GetArrayPosition(index) + GlobalPosition;
 			
 			if (!Endpoint.CurrentWorld.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
 				continue;
 
-			_voxels[GetArrayIndex(localPos)] = voxelData.NumericId;
+			_voxels[index] = voxelData.NumericId;
 			
 			_requiresAddMeshData = true;
 		}
@@ -108,18 +120,17 @@ public class Chunk
 		_arrayMesher.ClearArrays();
 		
 		
-		foreach (Coordinate localPos in Coordinate.OnAllAxes(GameSettings.CHUNK_VOXEL_COUNT))
+		for (int index = 0; index < GameSettings.CHUNK_VOXEL_COUNT; index++)
 		{
 			if (
-				!TryGetVoxelDataAtPosition(localPos, out VoxelData voxelData)
+				!TryGetVoxelDataAtPosition(index, out VoxelData voxelData)
 				|| !voxelData.Renderable
 				)
 				continue;
 			
+			Coordinate localPos = GetArrayPosition(index);
 			Coordinate voxelPos = localPos + GlobalPosition;
 			
-			// foreach (CubeFace cubeFace in Enum.GetValues(typeof(CubeFace)))
-			// foreach (Coordinate faceOffset in MeshStructures.CubeFaceOffsets)
 			for (int cubeFaceId = 0; cubeFaceId < MeshStructures.CubeFaceOffsets.Length; cubeFaceId++)
 			{
 				Coordinate nextPos = voxelPos + MeshStructures.CubeFaceOffsets[cubeFaceId];

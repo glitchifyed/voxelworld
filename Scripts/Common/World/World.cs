@@ -70,11 +70,11 @@ public class World
     
     public bool TryGetVoxelIdAtPosition(Coordinate position, out string id)
     {
-        Coordinate chunkPos = position / GameSettings.CHUNK_VOXEL_COUNT;
+        Coordinate chunkPos = position / GameSettings.CHUNK_VOXEL_SIZE;
         
         if (Chunks.TryGetValue(chunkPos, out Chunk chunk) && chunk != null)
         {
-            Coordinate localPos = position - chunkPos * GameSettings.CHUNK_VOXEL_COUNT;
+            Coordinate localPos = position - chunkPos * GameSettings.CHUNK_VOXEL_SIZE;
             int? voxelId = chunk.GetVoxelIdAtPosition(localPos);
             
             if (voxelId.HasValue)

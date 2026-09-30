@@ -49,7 +49,7 @@ public class ChunkRenderer
             return;
         
         // Only run again when crossing chunk borders
-        Coordinate currentChunkPosition = Client.Viewpoint.GlobalPosition.ToCoordinate() / GameSettings.CHUNK_VOXEL_COUNT;
+        Coordinate currentChunkPosition = Client.Viewpoint.GlobalPosition.ToCoordinate() / GameSettings.CHUNK_VOXEL_SIZE;
         if (currentChunkPosition == _chunkPosition)
             return;
         
