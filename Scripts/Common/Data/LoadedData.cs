@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Net;
 
 public static class LoadedData
 {
@@ -14,9 +15,20 @@ public static class LoadedData
         GenericData.Reset();
         
         // TODO: Load data from JSON files
-        Add(new VoxelData("game.voxel.stone") { ColorTemp = Color.FromHsv(0, 0, 0.7f) });
-        Add(new VoxelData("game.voxel.grass") { ColorTemp = Color.FromHsv(0.28f, 0.8f, 0.8f) });
-        Add(new VoxelData("game.voxel.dirt") { ColorTemp = Colors.Brown });
+        // Add(new VoxelData("game.voxel.stone") { ColorTemp = Color.FromHsv(0, 0, 0.7f) });
+        // Add(new VoxelData("game.voxel.grass") { ColorTemp = Color.FromHsv(0.28f, 0.8f, 0.8f) });
+        // Add(new VoxelData("game.voxel.dirt") { ColorTemp = Colors.Brown });
+        
+        if (!Endpoint.DynamicData.DoesDirectoryExist(""))
+            Endpoint.DynamicData.CopyFiles(Endpoint.BuiltInData.FilePath, "");
+        
+        LoadFromFiles(Endpoint.DynamicData);
+    }
+    
+    
+    private static void LoadFromFiles(DataFileManager files)
+    {
+        
     }
     
     

@@ -1,0 +1,18 @@
+{
+	"type": "voxel",
+	"namespace": "voxels",
+	
+	"ids": {
+		"stone": {
+			"color": "HSV 0 0 0.7"
+		},
+		
+		"grass": {
+			"color": "HSV 0.28 0.8 0.8"
+		},
+		
+		"dirt": {
+			"color": "HSV 0.05 0.5 0.3"
+		}
+	}
+}

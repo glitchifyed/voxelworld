@@ -12,6 +12,7 @@ config_version=5
 
 config/name="voxelworld"
 run/main_scene="uid://cvk66uxer7xri"
+config/use_custom_user_dir=true
 config/features=PackedStringArray("4.7", "C#")
 
 [dotnet]
