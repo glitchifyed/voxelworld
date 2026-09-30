@@ -21,36 +21,36 @@ public class World
         Chunk newChunk = new(position);
         Chunks[position] = newChunk;
         
-        Endpoint.Universe.ChunksNode.AddChild(newChunk.MeshInstance);
+        Endpoint.Universe.ChunksNode.CallDeferred(Node.MethodName.AddChild, newChunk.MeshInstance);
         
         return newChunk;
     }
     
     
-    // public string GetGeneratedVoxelId(Coordinate position)
-    // {
-    //     float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, -10f, 20f) / 2f;
-    //     int height = Mathf.FloorToInt(20 * heightPercent);
-        
-    //     if (position.Y > height)
-    //         return null;
-        
-    //     if (position.Y == height)
-    //         return "game.voxel.grass";
-        
-    //     if (position.Y >= height - 3)
-    //         return "game.voxel.dirt";
-        
-    //     return "game.voxel.stone";
-    // }
-    
     public string GetGeneratedVoxelId(Coordinate position)
     {
-        if (position.Y < 0)
-            return "game.voxel.stone";
+        float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, -10f, 20f) / 2f;
+        int height = Mathf.FloorToInt(5 * heightPercent);
         
-        return null;
+        if (position.Y > height)
+            return null;
+        
+        if (position.Y == height)
+            return "game.voxel.grass";
+        
+        if (position.Y >= height - 3)
+            return "game.voxel.dirt";
+        
+        return "game.voxel.stone";
     }
+    
+    // public string GetGeneratedVoxelId(Coordinate position)
+    // {
+    //     if (position.Y < 0)
+    //         return "game.voxel.stone";
+        
+    //     return null;
+    // }
     
     public bool TryGetGeneratedVoxelData(Coordinate voxelPos, out VoxelData voxelData)
     {

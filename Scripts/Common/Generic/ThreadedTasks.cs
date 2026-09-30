@@ -40,4 +40,10 @@ public class ThreadedTasks<T>
     
     public void AddTask(T task)
         => _tasks.Enqueue(task);
+    
+    public void RunTask(T task)
+    {
+        _tasks.Clear();
+        _tasks.Enqueue(task);
+    }
 }

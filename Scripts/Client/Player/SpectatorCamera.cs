@@ -31,8 +31,11 @@ public partial class SpectatorCamera : Camera3D
     private void Process_Movement(double delta)
     {
         var rightVector = Transform.Basis.X;
-        var upVector = Transform.Basis.Y;
-        var forwardVector = -Transform.Basis.Z;
+        // var upVector = Transform.Basis.Y;
+        // var forwardVector = -Transform.Basis.Z;
+        
+        var upVector = Vector3.Up;
+        var forwardVector = upVector.Cross(rightVector);
         
         var sprintBonus = Client.PlayerInput.SprintHeld ? _sprintBonus : 1d;
         var multiplier = _moveSpeed * sprintBonus * delta;
