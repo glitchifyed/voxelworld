@@ -46,8 +46,6 @@ public class ArrayMesher
 		_normals.Clear();
 		_uvs.Clear();
 		_colors.Clear();
-		
-		_surfaceArray.Clear();
 	}
 
 	public void AddSurfaces()
