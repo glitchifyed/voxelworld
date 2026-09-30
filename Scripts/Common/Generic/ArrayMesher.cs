@@ -38,10 +38,6 @@ public class ArrayMesher
 		
 		foreach (int index in MeshStructures.CubeFaceIndices[cubeFaceId])
 		{
-			// _vertices.Add(MeshStructures.CubeVertices[index] + offset);
-			// _normals.Add(normal);
-			// _colors.Add(color);
-			
 			ref readonly Vector3 vertex = ref MeshStructures.CubeVertices[index];
 			
 			_vertices[_currentIndex] = vertex + offset;
@@ -58,26 +54,17 @@ public class ArrayMesher
 
 	public void ClearArrays()
 	{
-		// _vertices.Clear();
-		// _normals.Clear();
-		// _uvs.Clear();
-		// _colors.Clear();
-		
 		_currentIndex = 0;
-		
-		// _surfaceArray.Clear();
 	}
 
 	public void AddSurfaces()
 	{
-		if (!_vertices.Any())
+		if (_currentIndex == 0)
 		{
 			ArrayMesh.ClearSurfaces();
 			
 			return;
 		}
-		
-		// _surfaceArray.Resize((int)Mesh.ArrayType.Max);
 		
 		_surfaceArray[(int)Mesh.ArrayType.Vertex] = _vertices[.._currentIndex];
 		_surfaceArray[(int)Mesh.ArrayType.Normal] = _normals[.._currentIndex];
