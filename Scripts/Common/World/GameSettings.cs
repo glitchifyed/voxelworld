@@ -7,10 +7,10 @@ public static class GameSettings
 	public const int CHUNK_VOXEL_COUNT = CHUNK_VOXEL_SIZE * CHUNK_VOXEL_SIZE * CHUNK_VOXEL_SIZE;
 	
 	public const int MAX_CHUNK_MESHES_PER_FRAME = 8;
-	public const int CHUNK_MESH_THREADS = 8;
-	public const int CHUNK_FILL_THREADS = 2;
+	public const int CHUNK_MESH_THREADS = 4;
+	public const int CHUNK_FILL_THREADS = 1;
 	
-	public const byte RENDER_DISTANCE_XZ = 6;
+	public const byte RENDER_DISTANCE_XZ = 4;
 	public const byte RENDER_DISTANCE_Y = 2;
 	
 	// TODO: world scale
