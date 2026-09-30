@@ -8,19 +8,27 @@ public class ArrayMesher
 
 	public readonly ArrayMesh ArrayMesh = new();
 
-	private readonly List<Vector3> _vertices = [];
-	private readonly List<Vector3> _normals = [];
-	private readonly List<Vector2> _uvs = [];
-	private readonly List<Color> _colors = [];
+	// private readonly List<Vector3> _vertices = [];
+	// private readonly List<Vector3> _normals = [];
+	// private readonly List<Vector2> _uvs = [];
+	// private readonly List<Color> _colors = [];
+	
+	private readonly Vector3[] _vertices;
+	private readonly Vector3[] _normals;
+	private readonly Color[] _colors;
+	
+	private int _currentIndex;
 
 	private readonly Godot.Collections.Array _surfaceArray = [];
 
-	
 
-
-	public ArrayMesher()
+	public ArrayMesher(int maxIndex)
 	{
 		_surfaceArray.Resize((int)Mesh.ArrayType.Max);
+		
+		_vertices = new Vector3[maxIndex];
+		_normals = new Vector3[maxIndex];
+		_colors = new Color[maxIndex];
 	}
 
 
@@ -30,24 +38,34 @@ public class ArrayMesher
 		
 		foreach (int index in MeshStructures.CubeFaceIndices[cubeFaceId])
 		{
-			_vertices.Add(MeshStructures.CubeVertices[index] + offset);
-			_normals.Add(normal);
-			_colors.Add(color);
+			// _vertices.Add(MeshStructures.CubeVertices[index] + offset);
+			// _normals.Add(normal);
+			// _colors.Add(color);
+			
+			ref readonly Vector3 vertex = ref MeshStructures.CubeVertices[index];
+			
+			_vertices[_currentIndex] = vertex + offset;
+			_normals[_currentIndex] = normal;
+			_colors[_currentIndex] = color;
+			
+			_currentIndex++;
 		}
 	}
 
 	public void AddQuad(CubeFace cubeFace, Vector3 offset, Color color)
 		=> AddQuad((int)cubeFace, offset, color);
-	
+		
 
 	public void ClearArrays()
 	{
-		_vertices.Clear();
-		_normals.Clear();
-		_uvs.Clear();
-		_colors.Clear();
+		// _vertices.Clear();
+		// _normals.Clear();
+		// _uvs.Clear();
+		// _colors.Clear();
 		
-		_surfaceArray.Clear();
+		_currentIndex = 0;
+		
+		// _surfaceArray.Clear();
 	}
 
 	public void AddSurfaces()
@@ -59,9 +77,11 @@ public class ArrayMesher
 			return;
 		}
 		
-		_surfaceArray[(int)Mesh.ArrayType.Vertex] = _vertices.ToArray();
-		_surfaceArray[(int)Mesh.ArrayType.Normal] = _normals.ToArray();
-		_surfaceArray[(int)Mesh.ArrayType.Color] = _colors.ToArray();
+		// _surfaceArray.Resize((int)Mesh.ArrayType.Max);
+		
+		_surfaceArray[(int)Mesh.ArrayType.Vertex] = _vertices[.._currentIndex];
+		_surfaceArray[(int)Mesh.ArrayType.Normal] = _normals[.._currentIndex];
+		_surfaceArray[(int)Mesh.ArrayType.Color] = _colors[.._currentIndex];
 		
 		ArrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, _surfaceArray);
 	}

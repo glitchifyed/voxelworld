@@ -17,13 +17,9 @@ public class Chunk
 	public bool IsWithinRenderBounds;
 	
 	
-	private readonly int?[] _voxels = new int?[
-		GameSettings.CHUNK_VOXEL_COUNT *
-		GameSettings.CHUNK_VOXEL_COUNT *
-		GameSettings.CHUNK_VOXEL_COUNT
-		];
+	private readonly int?[] _voxels = new int?[GameSettings.CHUNK_TOTAL_VOXELS];
 	
-	private readonly ArrayMesher _arrayMesher = new();
+	private readonly ArrayMesher _arrayMesher = new(GameSettings.CHUNK_TOTAL_VERTICES);
 	
 	
 	private bool _isVoxelFilling;
