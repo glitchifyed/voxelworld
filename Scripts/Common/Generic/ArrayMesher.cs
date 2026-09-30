@@ -26,9 +26,9 @@ public class ArrayMesher
 
 	public void AddQuad(int cubeFaceId, Vector3 offset, Color color)
 	{
-		Vector3 normal = MeshStructures.CubeFaceNormals[cubeFaceId];
+		ref readonly Vector3 normal = ref MeshStructures.CubeFaceNormals[cubeFaceId];
 		
-		foreach (var index in MeshStructures.CubeFaceIndices[cubeFaceId])
+		foreach (int index in MeshStructures.CubeFaceIndices[cubeFaceId])
 		{
 			_vertices.Add(MeshStructures.CubeVertices[index] + offset);
 			_normals.Add(normal);
@@ -46,6 +46,8 @@ public class ArrayMesher
 		_normals.Clear();
 		_uvs.Clear();
 		_colors.Clear();
+		
+		_surfaceArray.Clear();
 	}
 
 	public void AddSurfaces()

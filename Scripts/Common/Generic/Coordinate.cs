@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 public readonly record struct Coordinate
 {
@@ -62,14 +63,13 @@ public readonly record struct Coordinate
 
     
     public readonly IEnumerator<Coordinate> GetEnumerator()
-    {
-        return Enumerator switch
+        => Enumerator switch
         {
-            FillBounds.FromCentre => EnumerateFromCentre(this),
+            FillBounds.FloodFillFromCenter => FloodFillFromCenter(this),
+            FillBounds.SpiralFromCenter => SpiralFromCenter(this),
             
             _ => EnumerateDefault(this)
         };
-    }
     
     public static IEnumerator<Coordinate> EnumerateDefault(Coordinate bounds)
     {
@@ -79,7 +79,7 @@ public readonly record struct Coordinate
                     yield return new(x, y, z);
     }
     
-    public static IEnumerator<Coordinate> EnumerateFromCentre(Coordinate bounds)
+    public static IEnumerator<Coordinate> FloodFillFromCenter(Coordinate bounds)
     {
         Queue<Coordinate> queue = [];
         HashSet<Coordinate> hasChecked = [];
@@ -101,6 +101,49 @@ public readonly record struct Coordinate
         }
     }
     
+    public static IEnumerator<Coordinate> SpiralFromCenter(Coordinate bounds)
+    {
+        int y = 0;
+        
+        for (int w = 0; w < bounds.Y * 2 + 1; w++)
+        {
+            int x = 0, z = 0;
+            int dx = 1, dz = 0;
+            
+            int currentSteps = 1;
+            int steps = 0;
+            int currentTurns = 0;
+            
+            for (int i = 0; i < bounds.X * bounds.Z; i++)
+            {
+                yield return new(x, y, z);
+                
+                x += dx;
+                z += dz;
+                
+                steps++;
+                
+                if (steps != currentSteps)
+                    continue;
+                
+                steps = 0;
+                
+                (dx, dz) = (-dz, dx);
+                
+                if (currentTurns++ == 2)
+                {
+                    currentTurns = 0;
+                    currentSteps++;
+                }
+            }
+            
+            if (y > 0)
+                y = -y;
+            else
+                y = -y + 1;
+        }
+    }
+    
     
     public static Coordinate operator +(Coordinate left, Coordinate right)
         => new(left.X + right.X, left.Y + right.Y, left.Z + right.Z);
@@ -115,16 +158,20 @@ public readonly record struct Coordinate
         => new(Mathf.FloorToInt(left.X / right), Mathf.FloorToInt(left.Y / right), Mathf.FloorToInt(left.Z / right));
     
     
-    public bool IsWithinBounds(Coordinate bounds)
+    public static bool IsWithinBounds(int x, int y, int z, Coordinate bounds)
         =>
-        Math.Abs(X) <= bounds.X &&
-        Math.Abs(Y) <= bounds.Y &&
-        Math.Abs(Z) <= bounds.Z;
+        Math.Abs(x) <= bounds.X &&
+        Math.Abs(y) <= bounds.Y &&
+        Math.Abs(z) <= bounds.Z;
+    
+    public bool IsWithinBounds(Coordinate bounds)
+        => IsWithinBounds(X, Y, Z, bounds);
     
     
     public enum FillBounds
     {
         Default,
-        FromCentre
+        FloodFillFromCenter,
+        SpiralFromCenter
     }
 }

@@ -21,7 +21,7 @@ public class World
         Chunk newChunk = new(position);
         Chunks[position] = newChunk;
         
-        Endpoint.Universe.ChunksNode.AddChild(newChunk.MeshInstance);
+        Endpoint.Universe.ChunksNode.CallDeferred(Node.MethodName.AddChild, newChunk.MeshInstance);
         
         return newChunk;
     }

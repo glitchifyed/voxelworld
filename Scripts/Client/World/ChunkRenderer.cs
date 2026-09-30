@@ -10,7 +10,6 @@ public class ChunkRenderer
     
     private ThreadedTasks<Chunk> _threadedVoxelFill;
     private ThreadedTasks<Chunk> _threadedMeshData;
-    private ThreadedTasks<Chunk> _threadedUnloadChunks;
     
     private readonly ConcurrentQueue<Chunk> _chunksMeshesToCreate = [];
     
@@ -20,7 +19,7 @@ public class ChunkRenderer
         GameSettings.RENDER_DISTANCE_Y,
         GameSettings.RENDER_DISTANCE_XZ,
         
-        Coordinate.FillBounds.FromCentre
+        Coordinate.FillBounds.FloodFillFromCenter
         );
     
     private readonly HashSet<Chunk> _currentChunks = [];
@@ -31,18 +30,20 @@ public class ChunkRenderer
     {
         _threadedVoxelFill = new(GameSettings.CHUNK_FILL_THREADS, SequencedVoxelFill);
         _threadedMeshData = new(GameSettings.CHUNK_MESH_THREADS, SequencedMeshData);
-        _threadedUnloadChunks = new(1, SequencedUnloadChunk);
     }
     
     public void OnProcess()
     {
-        RunChunkScanner();
+        // RunChunkScanner();
+        CheckChunkPosition();
         
         RunCreateMeshes();
     }
     
     
-    private void RunChunkScanner()
+    
+    
+    private void CheckChunkPosition()
     {
         if (Client.Viewpoint == null)
             return;
@@ -54,9 +55,12 @@ public class ChunkRenderer
         
         _chunkPosition = currentChunkPosition;
         
-        
+        RunChunkScanner(currentChunkPosition);
+    }
+    
+    private void RunChunkScanner(Coordinate currentChunkPosition)
+    {
         // Unload previous chunks
-        // TODO: remove multithreading? i don't think it's needed tbh
         foreach (Chunk chunk in _currentChunks)
         {
             if ((chunk.Position - currentChunkPosition).IsWithinBounds(_renderBounds))
@@ -69,7 +73,7 @@ public class ChunkRenderer
             
             chunk.Reset();
             
-            _threadedUnloadChunks.AddTask(chunk);
+            UnloadChunk(chunk);
         }
         
         
@@ -131,7 +135,7 @@ public class ChunkRenderer
             _chunksMeshesToCreate.Enqueue(chunk);
     }
     
-    private void SequencedUnloadChunk(Chunk chunk)
+    private void UnloadChunk(Chunk chunk)
     {
         if (chunk.IsWithinRenderBounds)
             return;
