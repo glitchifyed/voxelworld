@@ -9,4 +9,14 @@ public static class Extensions
             Mathf.FloorToInt(position.Y),
             Mathf.FloorToInt(position.Z)
             );
+    
+    public static void CheckError(this Error error, string message = null)
+    {
+        if (error == Error.Ok)
+            return;
+
+        GD.PushWarning(error);
+
+        throw new Exception(message ?? $"An error occurred.");
+    }
 }

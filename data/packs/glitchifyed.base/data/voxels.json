@@ -1,6 +1,6 @@
 {
 	"type": "voxel",
-	"namespace": "voxels",
+	"namespace": "glitchifyed.base.voxels",
 	
 	"ids": {
 		"stone": {

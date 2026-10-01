@@ -6,8 +6,7 @@ public partial class Endpoint : Node
     
     public static Universe Universe { get; private set; }
     
-    public static DataFileManager BuiltInData { get; private set; }
-    public static DataFileManager DynamicData { get; private set; }
+    public static DataFileManager Data;
     
     public static World CurrentWorld
     {
@@ -20,16 +19,12 @@ public partial class Endpoint : Node
         base._Ready();
         
         
-        BuiltInData = new(ProjectSettings.GlobalizePath("res://Data"));
         // TODO: if standalone server, get path inside executable
-        DynamicData = new(ProjectSettings.GlobalizePath("user://Data"));
-        
-        
-        
+        Data = new();
         
         
         GameSettings.Load();
-		LoadedData.Load();
+		LoadedData.Load(Data);
         
         
         Universe = new Universe();
