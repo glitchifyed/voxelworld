@@ -10,6 +10,8 @@ public partial class FilesystemInstance
     public readonly string Path;
     public readonly string AbsolutePath;
 
+    public readonly string FileName;
+
     public readonly string ParentPath;
     public readonly string ParentAbsolutePath;
 
@@ -21,10 +23,12 @@ public partial class FilesystemInstance
         Root = root;
         
         Path = path;
-        ParentPath = Regex.Replace(Path, "/?[^/]+/?$", "");
+        ParentPath = GetParentPath().Replace(Path, "");
 
         AbsolutePath = ProjectSettings.GlobalizePath($"{Root}/{Path}");
         ParentAbsolutePath = ProjectSettings.GlobalizePath($"{Root}/{ParentPath}");
+        
+        FileName = GetFileName().Match(Path).Value;
 
         if (DirAccess.DirExistsAbsolute(AbsolutePath))
             TypeOfFile = FileType.Directory;
@@ -199,4 +203,7 @@ public partial class FilesystemInstance
         Directory,
         File
     }
+
+    [GeneratedRegex("([^/]+)/?$")] private static partial Regex GetFileName();
+    [GeneratedRegex("/?[^/]+/?$")] private static partial Regex GetParentPath();
 }

@@ -3,9 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using Godot;
 
-public readonly record struct JsonObject
+public class JsonObject
 {
     private readonly string _string;
+    private readonly bool _boolean;
     private readonly JsonObject[] _array;
     private readonly Dictionary<string, JsonObject> _dictionary;
 
@@ -17,6 +18,13 @@ public readonly record struct JsonObject
         _string = @string;
 
         _valueType = ValueType.String;
+    }
+    
+    public JsonObject(bool boolean)
+    {
+        _boolean = boolean;
+        
+        _valueType = ValueType.Boolean;
     }
 
     public JsonObject(JsonObject[] array)
@@ -41,9 +49,15 @@ public readonly record struct JsonObject
         
         if (type == typeof(string))
         {
-            value = (T)(object)_string;
+            value = (T) (object) _string;
             
-            return _string != null;
+            return IsString();
+        }
+        else if (type == typeof(bool))
+        {
+            value = (T) (object) _boolean;
+            
+            return IsBoolean();
         }
         
         value = default;
@@ -78,7 +92,7 @@ public readonly record struct JsonObject
             yield return value;
     }
     
-    public IEnumerator<KeyValuePair<string, JsonObject>> GetDictionaryEnumerator()
+    public IEnumerable<KeyValuePair<string, JsonObject>> GetDictionaryEnumerator()
     {
         ThrowIfNot(ValueType.Dictionary);
         
@@ -92,6 +106,9 @@ public readonly record struct JsonObject
     
     public bool IsString()
         => _valueType == ValueType.String;
+    
+    public bool IsBoolean()
+        => _valueType == ValueType.Boolean;
     
     public bool IsArray()
         => _valueType == ValueType.Array;
@@ -112,6 +129,7 @@ public readonly record struct JsonObject
         Empty,
 
         String,
+        Boolean,
 
         Array,
         Dictionary
