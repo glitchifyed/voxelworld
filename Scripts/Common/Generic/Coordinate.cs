@@ -8,7 +8,6 @@ public readonly record struct Coordinate
     public readonly int X;
     public readonly int Y;
     public readonly int Z;
-    public readonly FillBounds Enumerator;
     
     
     private static readonly Coordinate[] NeighbourOffset =
@@ -24,22 +23,11 @@ public readonly record struct Coordinate
     ];
     
     
-    public Coordinate(int x = 0, int y = 0, int z = 0, FillBounds enumerator = FillBounds.Default)
+    public Coordinate(int x = 0, int y = 0, int z = 0)
     {
         X = x;
         Y = y;
         Z = z;
-        
-        Enumerator = enumerator;
-    }
-    
-    public Coordinate(Coordinate coordinate, FillBounds enumerator = FillBounds.Default)
-    {
-        X = coordinate.X;
-        Y = coordinate.Y;
-        Z = coordinate.Z;
-        
-        Enumerator = enumerator;
     }
     
     public static Coordinate OnAllAxes(int i)
@@ -60,26 +48,16 @@ public readonly record struct Coordinate
     public override readonly int GetHashCode()
         => base.GetHashCode();
 
-
     
     public readonly IEnumerator<Coordinate> GetEnumerator()
-        => Enumerator switch
-        {
-            FillBounds.FloodFillFromCenter => FloodFillFromCenter(this),
-            FillBounds.SpiralFromCenter => SpiralFromCenter(this),
-            
-            _ => EnumerateDefault(this)
-        };
-    
-    public static IEnumerator<Coordinate> EnumerateDefault(Coordinate bounds)
     {
-        for (int x = 0; x < bounds.X; x++)
-		    for (int y = 0; y < bounds.Y; y++)
-		        for (int z = 0; z < bounds.Z; z++)
+        for (int x = 0; x < X; x++)
+		    for (int y = 0; y < Y; y++)
+		        for (int z = 0; z < Z; z++)
                     yield return new(x, y, z);
     }
     
-    public static IEnumerator<Coordinate> FloodFillFromCenter(Coordinate bounds)
+    public IEnumerable<Coordinate> FloodFillFromCenter()
     {
         Queue<Coordinate> queue = [];
         HashSet<Coordinate> hasChecked = [];
@@ -95,17 +73,17 @@ public readonly record struct Coordinate
             {
                 Coordinate position = currentPosition + offset;
                 
-                if (position.IsWithinBounds(bounds) && hasChecked.Add(position))
+                if (position.IsWithinBounds(this) && hasChecked.Add(position))
                     queue.Enqueue(position);
             }
         }
     }
     
-    public static IEnumerator<Coordinate> SpiralFromCenter(Coordinate bounds)
+    public IEnumerable<Coordinate> SpiralFromCenter()
     {
         int y = 0;
         
-        for (int w = 0; w < bounds.Y * 2 + 1; w++)
+        for (int w = 0; w < Y * 2 + 1; w++)
         {
             int x = 0, z = 0;
             int dx = 1, dz = 0;
@@ -114,7 +92,7 @@ public readonly record struct Coordinate
             int steps = 0;
             int currentTurns = 0;
             
-            for (int i = 0; i < bounds.X * bounds.Z; i++)
+            for (int i = 0; i < X * Z; i++)
             {
                 yield return new(x, y, z);
                 
@@ -166,12 +144,4 @@ public readonly record struct Coordinate
     
     public bool IsWithinBounds(Coordinate bounds)
         => IsWithinBounds(X, Y, Z, bounds);
-    
-    
-    public enum FillBounds
-    {
-        Default,
-        FloodFillFromCenter,
-        SpiralFromCenter
-    }
 }

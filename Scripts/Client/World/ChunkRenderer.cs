@@ -17,9 +17,7 @@ public class ChunkRenderer
     private readonly Coordinate _renderBounds = new(
         GameSettings.RENDER_DISTANCE_XZ,
         GameSettings.RENDER_DISTANCE_Y,
-        GameSettings.RENDER_DISTANCE_XZ,
-        
-        Coordinate.FillBounds.FloodFillFromCenter
+        GameSettings.RENDER_DISTANCE_XZ
         );
     
     private readonly HashSet<Chunk> _currentChunks = [];
@@ -78,7 +76,7 @@ public class ChunkRenderer
         
         
         // Get currently loaded chunks
-        foreach (Coordinate offset in _renderBounds)
+        foreach (Coordinate offset in _renderBounds.FloodFillFromCenter())
         {
             var position = currentChunkPosition + offset;
             
