@@ -1,12 +1,13 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Godot;
 
-public class JsonObject
+public partial class JsonObject
 {
     private readonly string _string;
     private readonly bool _boolean;
+    private readonly int _integer;
+    private readonly float _float;
     private readonly JsonObject[] _array;
     private readonly Dictionary<string, JsonObject> _dictionary;
 
@@ -25,6 +26,20 @@ public class JsonObject
         _boolean = boolean;
         
         _valueType = ValueType.Boolean;
+    }
+    
+    public JsonObject(int integer)
+    {
+        _integer = integer;
+        
+        _valueType = ValueType.Integer;
+    }
+    
+    public JsonObject(float @float)
+    {
+        _float = @float;
+        
+        _valueType = ValueType.Float;
     }
 
     public JsonObject(JsonObject[] array)
@@ -59,6 +74,24 @@ public class JsonObject
             
             return IsBoolean();
         }
+        else if (type == typeof(int))
+        {
+            value = (T) (object) _integer;
+            
+            return IsInteger();
+        }
+        else if (type == typeof(float))
+        {
+            value = (T) (object) _float;
+            
+            return IsFloat();
+        }
+        else if (type == typeof(Color) && TryGet(out string colorString))
+        {
+            value = (T) (object) Extensions.ColorFromString(colorString);
+            
+            return true;
+        }
         
         value = default;
         
@@ -69,7 +102,7 @@ public class JsonObject
     {
         value = IsArray() ? _array[index] : default;
         
-        return !value.IsEmpty();
+        return value != null && !value.IsEmpty();
     }
 
     public bool TryGet(string key, out JsonObject value)
@@ -79,7 +112,7 @@ public class JsonObject
         else
             value = default;
 
-        return !value.IsEmpty();
+        return value != null && !value.IsEmpty();
     }
     
     
@@ -110,6 +143,12 @@ public class JsonObject
     public bool IsBoolean()
         => _valueType == ValueType.Boolean;
     
+    public bool IsInteger()
+        => _valueType == ValueType.Integer;
+    
+    public bool IsFloat()
+        => _valueType == ValueType.Float;
+    
     public bool IsArray()
         => _valueType == ValueType.Array;
     
@@ -130,6 +169,8 @@ public class JsonObject
 
         String,
         Boolean,
+        Integer,
+        Float,
 
         Array,
         Dictionary

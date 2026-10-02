@@ -21,6 +21,15 @@ public static class JsonUtil
         {
             Variant.Type.String
                 => new(variant.AsString()),
+            
+            Variant.Type.Bool
+                => new(variant.AsBool()),
+            
+            Variant.Type.Int
+                => new(variant.AsInt32()),
+            
+            Variant.Type.Float
+                => new(variant.AsSingle()),
 
             Variant.Type.Array
                 => new(FromGodotArray(variant.AsGodotArray())),

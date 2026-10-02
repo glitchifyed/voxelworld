@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using Godot;
 
 public class DataFileManager(string basePath = "user:/")
@@ -34,15 +35,15 @@ public class DataFileManager(string basePath = "user:/")
 				continue;
 
 			var metadataFile = packDirectory.Get("metadata.json");
-			if (metadataFile != null || !metadataFile.IsFile())
-				throw new Exception($"Pack {packDirectory.FileName} contains an invalid metadata JSON.");
+			if (metadataFile == null || !metadataFile.IsFile())
+				throw new InvalidOperationException($"Pack {packDirectory.FileName} contains an invalid metadata JSON.");
 
 			var metadata = metadataFile.ReadJson();
-			if (!metadata.TryGet("id", out var idObj) || !idObj.TryGet(out string packId))
-				throw new Exception($"Pack {packDirectory.FileName} metadata doesn't have a valid ID.");
+			if (!metadata.TryGet("pack_id", out var idObj) || !idObj.TryGet(out string packId))
+				throw new InvalidOperationException($"Pack {packDirectory.FileName} metadata doesn't have a valid ID.");
 
 			if (packNamesToIds.ContainsKey(packId))
-				throw new Exception($"Pack {packDirectory.FileName} contains a duplicate ID: {packId}");
+				throw new DuplicateNameException($"Pack {packDirectory.FileName} contains a duplicate ID: {packId}");
 
 			packNamesToIds[packId] = packDirectory.FileName;
 		}
@@ -51,14 +52,14 @@ public class DataFileManager(string basePath = "user:/")
 		var packsList = new FilesystemInstance(BasePath, $"{path}/loaded_packs.json").ReadJson();
 
 		if (!packsList.IsArray())
-			throw new Exception("Data contains an invalid loaded_packs.json.");
+			throw new InvalidOperationException("Data contains an invalid loaded_packs.json.");
 
 		HashSet<PackData> loadedPacks = [];
 
 		foreach (var packIdObj in packsList.GetArrayEnumerator())
 		{
 			if (!packIdObj.TryGet(out string packId) || !packNamesToIds.TryGetValue(packId, out var packFileName))
-				throw new Exception($"Loaded packs contains an invalid ID: {packId}");
+				throw new InvalidOperationException($"Loaded packs contains an invalid ID: {packId}");
 
 			PackData packData = GetPackData(packId, $"{path}/packs/{packFileName}/data");
 
@@ -116,10 +117,12 @@ public class DataFileManager(string basePath = "user:/")
 			{
 				"generic" => new(id),
 				
-				"voxel" => GetVoxelData(id, dataPair.Value)
+				"voxel" => GetVoxelData(id, dataPair.Value),
 				
-				_ => throw new Exception($"'{type}' is not a valid data type.")
+				_ => throw new InvalidOperationException($"'{type}' is not a valid data type.")
 			};
+			
+			packData.Data.Add(dataObj);
 		}
 	}
 	
@@ -127,7 +130,13 @@ public class DataFileManager(string basePath = "user:/")
 	{
 		VoxelData voxelData = new(id);
 		
+		if (jsonData.TryGet("color", out var colorObj) && colorObj.TryGet(out Color color))
+			voxelData.ColorTemp = color;
 		
+		if (jsonData.TryGet("translucent", out var translucentObj) && translucentObj.TryGet(out bool translucent))
+			voxelData.Translucent = translucent;
+		
+		return voxelData;
 	}
 
 

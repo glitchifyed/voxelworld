@@ -36,12 +36,12 @@ public class World
             return null;
         
         if (position.Y == height)
-            return "game.voxel.grass";
+            return "glitchifyed.base.voxels.grass";
         
         if (position.Y >= height - 3)
-            return "game.voxel.dirt";
+            return "glitchifyed.base.voxels.dirt";
         
-        return "game.voxel.stone";
+        return "glitchifyed.base.voxels.stone";
     }
     
     // public string GetGeneratedVoxelId(Coordinate position)

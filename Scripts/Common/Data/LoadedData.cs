@@ -14,17 +14,18 @@ public static class LoadedData
         _loadedData.Clear();
         GenericData.Reset();
         
-        // TODO: Load data from JSON files
-        // Add(new VoxelData("game.voxel.stone") { ColorTemp = Color.FromHsv(0, 0, 0.7f) });
-        // Add(new VoxelData("game.voxel.grass") { ColorTemp = Color.FromHsv(0.28f, 0.8f, 0.8f) });
-        // Add(new VoxelData("game.voxel.dirt") { ColorTemp = Colors.Brown });
-        
         // TODO: Add an ingame option to reset the pack instead
         // TODO: Use try catch to show error dialogue
         data.ClearPack("glitchifyed.base");
         data.GenerateFolderFromResources("data");
         
-        data.CompileDataPacks("data");
+        var packs = data.CompileDataPacks("data");
+        
+        foreach (var pack in packs)
+        {
+            foreach (GenericData dataObject in pack.Data)
+                Add(dataObject);
+        }
     }
     
     
