@@ -16,7 +16,7 @@ public partial class FilesystemInstance
     public readonly FileType TypeOfFile;
 
     
-    public FilesystemInstance(string root, string path, FileType createIfNull = FileType.None, string storeString = null)
+    public FilesystemInstance(string root, string path, FileType createIfNull = default, string storeString = null)
     {
         Root = root;
         
@@ -50,35 +50,37 @@ public partial class FilesystemInstance
             TypeOfFile = createIfNull;
         }
 
-        if (TypeOfFile == FileType.None)
+        if (TypeOfFile == default)
             throw new Exception($"Path '{AbsolutePath}' had an issue.");
     }
     
-    public FilesystemInstance Get(string path, FileType createIfNull = FileType.None)
+    public FilesystemInstance Get(string path, FileType createIfNull = default)
         => new(Root, $"{Path}/{path}", createIfNull);
     
     
     public static bool DoesPathExist(string absolutePath)
         => DirAccess.DirExistsAbsolute(absolutePath) || FileAccess.FileExists(absolutePath);
     
+    public static FileType GetFileTypeAtPath(string absolutePath)
+        => DirAccess.DirExistsAbsolute(absolutePath) ? FileType.Directory : FileAccess.FileExists(absolutePath) ? FileType.File : default;
+    
     
     public static bool Delete(string absolutePath, bool safe = false)
     {
-        if (safe && !DoesPathExist(absolutePath))
+        FileType fileTypeAtPath = GetFileTypeAtPath(absolutePath);
+        
+        if (safe && fileTypeAtPath == default)
             return false;
         
-        if (FileAccess.FileExists(absolutePath))
+        
+        if (fileTypeAtPath == FileType.Directory)
         {
-            DirAccess.RemoveAbsolute(absolutePath).CheckError($"Failed to delete path '{absolutePath}'");
-            
-            return true;
+            foreach (var name in DirAccess.GetDirectoriesAt(absolutePath))
+                Delete($"{absolutePath}/{name}");
+        
+            foreach (var name in DirAccess.GetFilesAt(absolutePath))
+                DirAccess.RemoveAbsolute($"{absolutePath}/{name}");
         }
-        
-        foreach (var name in DirAccess.GetDirectoriesAt(absolutePath))
-            Delete($"{absolutePath}/{name}");
-        
-        foreach (var name in DirAccess.GetFilesAt(absolutePath))
-            DirAccess.RemoveAbsolute($"{absolutePath}/{name}");
         
         DirAccess.RemoveAbsolute(absolutePath).CheckError($"Failed to delete path '{absolutePath}'");
         
@@ -106,10 +108,16 @@ public partial class FilesystemInstance
 
 
     // Directory
-    public IEnumerator<FilesystemInstance> GetEnumerator()
+    private void ThrowIfNotDirectory()
     {
         if (!IsDirectory())
             throw new Exception($"Path '{AbsolutePath}' is not a directory.");
+    }
+    
+    
+    public IEnumerator<FilesystemInstance> GetEnumerator()
+    {
+        ThrowIfNotDirectory();
 
         using DirAccess directory = DirAccess.Open(AbsolutePath);
         CheckAccessError("while opening a directory");
@@ -126,11 +134,18 @@ public partial class FilesystemInstance
         }
     }
     
+    
     // File
-    public string ReadString()
+    private void ThrowIfNotFile()
     {
         if (!IsFile())
             throw new Exception($"Path '{AbsolutePath}' is not a file.");
+    }
+    
+    
+    public string ReadString()
+    {
+        ThrowIfNotFile();
         
         using FileAccess file = FileAccess.Open(AbsolutePath, FileAccess.ModeFlags.Read);
         CheckAccessError(file, "while reading a string");
@@ -140,14 +155,24 @@ public partial class FilesystemInstance
     
     public void WriteString(string storeString)
     {
-        if (!IsFile())
-            throw new Exception($"Path '{AbsolutePath}' is not a file.");
+        ThrowIfNotFile();
         
         using FileAccess file = FileAccess.Open(AbsolutePath, FileAccess.ModeFlags.Write);
         CheckAccessError(file, "while storing a string");
 
         file.StoreString(storeString);
         CheckAccessError(file, "while storing a string");
+    }
+    
+    
+    public JsonObject ReadJson()
+    {
+        ThrowIfNotFile();
+        
+        using FileAccess file = FileAccess.Open(AbsolutePath, FileAccess.ModeFlags.Read);
+        CheckAccessError(file, "while reading a string");
+        
+        return JsonUtil.Parse(file.GetAsText());
     }
 
 

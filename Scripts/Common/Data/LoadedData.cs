@@ -22,6 +22,8 @@ public static class LoadedData
         // TODO: add an ingame option to reset the pack instead
         data.ClearPack("glitchifyed.base");
         data.GenerateFolderFromResources("data");
+        
+        data.CompileDataPacks("data");
     }
     
     

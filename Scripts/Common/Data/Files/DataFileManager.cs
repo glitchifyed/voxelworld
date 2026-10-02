@@ -23,8 +23,19 @@ public class DataFileManager(string basePath = "user:/")
 		}
 	}
 	
+	public void CompileDataPacks(string path)
+	{
+		var packsList = new FilesystemInstance(BasePath, $"{path}/loaded_packs.json").ReadJson();
+		if (packsList.IsArray())
+			foreach (var idk in packsList.GetArrayEnumerator())
+			{
+				if (idk.TryGet(out string value))
+					GD.Print(value);
+			}
+	}
+	
 	public void ClearPack(string packId)
-		=> FilesystemInstance.Delete($"{basePath}/data/packs/{packId}", true);
+		=> FilesystemInstance.Delete($"{BasePath}/data/packs/{packId}", true);
 	
 	
 	public string GetPath(string localPath)
