@@ -1,5 +1,7 @@
 using Godot;
+using NuLua;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -49,6 +51,12 @@ public static partial class Extensions
         return colorType == "HSV" ?
             Color.FromHsv(one, two, three, alpha) :
             new Color(one, two, three, alpha);
+    }
+    
+    public static IEnumerator<LuaValue> GetEnumerator(this LuaFuncArguments arguments)
+    {
+        for (int i = 0; i < arguments.Length; i++)
+            yield return arguments[i];
     }
     
     

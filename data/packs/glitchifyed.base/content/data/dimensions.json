@@ -1,0 +1,10 @@
+{
+    "type": "dimension",
+    "namespace": "glitchifyed.base.dimensions",
+    
+    "data": {
+        "earth": {
+            "generator": "glitchifyed.base.generators.earth"
+        }
+    }
+}

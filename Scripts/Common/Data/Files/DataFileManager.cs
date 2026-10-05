@@ -61,7 +61,7 @@ public class DataFileManager(string basePath = "user:/")
 			if (!packIdObj.TryGet(out string packId) || !packNamesToIds.TryGetValue(packId, out var packFileName))
 				throw new InvalidOperationException($"Loaded packs contains an invalid ID: {packId}");
 
-			PackData packData = GetPackData(packId, $"{path}/packs/{packFileName}/data");
+			PackData packData = GetPackData(packId, $"{path}/packs/{packFileName}/content");
 
 			loadedPacks.Add(packData);
 		}
@@ -88,7 +88,10 @@ public class DataFileManager(string basePath = "user:/")
 				continue;
 			}
 
-			ScanDataFile(parentFile, packData);
+			if (parentFile.IsData())
+				ScanDataFile(parentFile, packData);
+			else if (parentFile.IsScript())
+				ScanScriptFile(parentFile, packData);
 		}
 
 
@@ -98,44 +101,54 @@ public class DataFileManager(string basePath = "user:/")
 	private void ScanDataFile(FilesystemInstance file, PackData packData)
 	{
 		// TODO: Throw errors when things go wrong
-		
+
 		var jsonData = file.ReadJson();
 
 		if (!jsonData.TryGet("type", out var typeObj) || !typeObj.TryGet(out string type) ||
 			!jsonData.TryGet("namespace", out var namespaceObj) || !namespaceObj.TryGet(out string @namespace) ||
 			!jsonData.TryGet("data", out var dataDictionaryObj) || !dataDictionaryObj.IsDictionary())
 			return;
-		
+
 		foreach (var dataPair in dataDictionaryObj.GetDictionaryEnumerator())
 		{
 			if (!dataPair.Value.IsDictionary())
 				continue;
-			
+
 			string id = $"{@namespace}.{dataPair.Key}";
-			
+
 			GenericData dataObj = type switch
 			{
 				"generic" => new(id),
-				
+
 				"voxel" => GetVoxelData(id, dataPair.Value),
-				
+
+				"dimension" => null,
+
 				_ => throw new InvalidOperationException($"'{type}' is not a valid data type.")
 			};
-			
-			packData.Data.Add(dataObj);
+
+			if (dataObj != null)
+				packData.Data.Add(dataObj);
 		}
 	}
 	
+	private void ScanScriptFile(FilesystemInstance file, PackData packData)
+	{
+		// TODO: Throw errors when things go wrong
+
+		packData.Scripts.Add(file);
+	}
+
 	private VoxelData GetVoxelData(string id, JsonObject jsonData)
 	{
 		VoxelData voxelData = new(id);
-		
+
 		if (jsonData.TryGet("color", out var colorObj) && colorObj.TryGet(out Color color))
 			voxelData.ColorTemp = color;
-		
+
 		if (jsonData.TryGet("translucent", out var translucentObj) && translucentObj.TryGet(out bool translucent))
 			voxelData.Translucent = translucent;
-		
+
 		return voxelData;
 	}
 

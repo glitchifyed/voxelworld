@@ -1,7 +1,12 @@
 using Godot;
+using NuLua;
+using NuLua.Luau;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Text;
+using System.Threading.Tasks;
 
 public static class LoadedData
 {
@@ -26,6 +31,36 @@ public static class LoadedData
             foreach (GenericData dataObject in pack.Data)
                 Add(dataObject);
         }
+        
+        // Task.Run(() => RunScripts(packs));
+        RunScripts(packs);
+    }
+    
+    
+    public static void RunScripts(HashSet<PackData> packs)
+    {
+        using var luauState = LuauState.Create();
+        luauState.OpenLibraries();
+        
+        luauState["print"] = luauState.CreateFunction((state, arguments) =>
+        {
+            string printString = null;
+            
+            foreach (var argument in arguments)
+                printString = printString == null ? argument.ToString() : $"{printString} {argument}";
+            
+            GD.Print(printString ?? "nil");
+            
+            return default;
+        });
+        
+        // TODO: cancellation token when reloading
+        
+        foreach (var pack in packs)
+            foreach (var scriptFile in pack.Scripts)
+                luauState.DoString(scriptFile.ReadString());
+        
+        
     }
     
     
@@ -42,7 +77,7 @@ public static class LoadedData
         // Unknown value
         GD.PushWarning($"Failed to get data: '{id}' - did you use the wrong identifier?");
         
-        return null;
+        return default;
     }
     
     public static T GetDataByNumericId<T>(int id) where T : GenericData

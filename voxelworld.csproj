@@ -4,4 +4,8 @@
     <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NuLua" Version="0.1.0" />
+    <PackageReference Include="NuLua.Luau" Version="0.1.0" />
+  </ItemGroup>
 </Project>
