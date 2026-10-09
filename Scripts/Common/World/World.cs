@@ -1,9 +1,13 @@
 using Godot;
+using NuLua;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
-public class World
+public class World(string worldDataId)
 {
+    
+    public readonly string WorldDataId = worldDataId;
     
     public readonly Dictionary<Coordinate, Chunk> Chunks = [];
     
@@ -29,19 +33,32 @@ public class World
     
     public string GetGeneratedVoxelId(Coordinate position)
     {
-        float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, -10f, 20f) / 2f;
-        int height = Mathf.FloorToInt(25 * heightPercent);
+        // float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, -10f, 20f) / 2f;
+        // int height = Mathf.FloorToInt(25 * heightPercent);
         
-        if (position.Y > height)
-            return null;
+        // if (position.Y > height)
+        //     return null;
         
-        if (position.Y == height)
-            return "glitchifyed.base.voxels.grass";
+        // if (position.Y == height)
+        //     return "glitchifyed.base.voxels.grass";
         
-        if (position.Y >= height - 3)
-            return "glitchifyed.base.voxels.dirt";
+        // if (position.Y >= height - 3)
+        //     return "glitchifyed.base.voxels.dirt";
         
-        return "glitchifyed.base.voxels.stone";
+        // return "glitchifyed.base.voxels.stone";
+        
+        var worldData = LoadedData.GetDataById<WorldData>(WorldDataId);
+        var generatorData = LoadedData.GetDataById<LuaFunctionData>(worldData.GeneratorId);
+        
+        var result = generatorData.LuaFunction.Invoke([position.X, position.Y, position.Z]);
+        
+        if (!result[0].TryRead(out string voxelId))
+            throw new InvalidOperationException("Invalid voxel id.");
+        
+        if (voxelId != "")
+            return voxelId;
+        
+        return null;
     }
     
     // public string GetGeneratedVoxelId(Coordinate position)

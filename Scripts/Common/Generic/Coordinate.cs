@@ -41,6 +41,9 @@ public readonly record struct Coordinate
     public readonly Vector3 ToVector3()
         => new(X, Y, Z);
     
+    public readonly System.Numerics.Vector3 ToNumericsVector3()
+        => new(X, Y, Z);
+    
 
     public override readonly string ToString()
         => $"({X}, {Y}, {Z})";

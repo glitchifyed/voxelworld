@@ -9,23 +9,17 @@ public class GenericData
     
     
     public readonly string Id;
-    public readonly string LangId;
     
     public readonly int NumericId;
     
     
-    public GenericData(string id, string langId = null)
+    public GenericData(string id)
     {
         NumericId = _numericIds.Count;
         _numericIds.Add(id);
         
         Id = id;
-        LangId = langId;
     }
-    
-    
-    public string GetLangId()
-        => LangId ?? Id;
     
     
     public static string GetIdFromNumeric(int numericId)

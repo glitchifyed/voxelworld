@@ -14,7 +14,8 @@ public partial class Universe : Node
 		base._Ready();
 		
 		
-		CurrentWorld = new();
+		// TODO: world creation
+		CurrentWorld = new("glitchifyed.base.worlds.earth");
 		
 		
 		ChunksNode = new()

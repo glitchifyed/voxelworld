@@ -92,9 +92,13 @@ public class ChunkRenderer
             _currentChunks.Add(chunk);
             
             
-            if (chunk.RequiresVoxelFill())
-                _threadedVoxelFill.AddTask(chunk);
+            // if (chunk.RequiresVoxelFill())
+            //     _threadedVoxelFill.AddTask(chunk);
         }
+        
+        foreach (Chunk chunk in _currentChunks)
+            if (chunk.RequiresVoxelFill())
+                SequencedVoxelFill(chunk);
     }
     
     // Run on the main thread. Instructs ArrayMeshes to construct geometry.
@@ -119,7 +123,8 @@ public class ChunkRenderer
         chunk.FillVoxels();
         
         if (chunk.RequiresMeshData())
-            _threadedMeshData.AddTask(chunk);
+            // _threadedMeshData.AddTask(chunk);
+            SequencedMeshData(chunk);
     }
     
     private void SequencedMeshData(Chunk chunk)

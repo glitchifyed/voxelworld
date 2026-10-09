@@ -1,6 +1,6 @@
 {
-    "type": "dimension",
-    "namespace": "glitchifyed.base.dimensions",
+    "type": "world",
+    "namespace": "glitchifyed.base.worlds",
     
     "data": {
         "earth": {

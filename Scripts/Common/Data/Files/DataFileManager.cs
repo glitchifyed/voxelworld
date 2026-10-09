@@ -122,22 +122,23 @@ public class DataFileManager(string basePath = "user:/")
 
 				"voxel" => GetVoxelData(id, dataPair.Value),
 
-				"dimension" => null,
+				"world" => GetWorldData(id, dataPair.Value),
 
-				_ => throw new InvalidOperationException($"'{type}' is not a valid data type.")
+				_ => throw new InvalidOperationException($"File path '{file.AbsolutePath}' contains invalid data type '{type}'.")
 			};
 
 			if (dataObj != null)
 				packData.Data.Add(dataObj);
 		}
 	}
-	
+
 	private void ScanScriptFile(FilesystemInstance file, PackData packData)
 	{
 		// TODO: Throw errors when things go wrong
 
 		packData.Scripts.Add(file);
 	}
+
 
 	private VoxelData GetVoxelData(string id, JsonObject jsonData)
 	{
@@ -150,6 +151,16 @@ public class DataFileManager(string basePath = "user:/")
 			voxelData.Translucent = translucent;
 
 		return voxelData;
+	}
+
+	private WorldData GetWorldData(string id, JsonObject jsonData)
+	{
+		WorldData worldData = new(id);
+
+		if (jsonData.TryGet("generator", out var generatorObj) && generatorObj.TryGet(out string generatorId))
+			worldData.GeneratorId = generatorId;
+
+		return worldData;
 	}
 
 
