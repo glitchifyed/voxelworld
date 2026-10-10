@@ -4,17 +4,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public class World(string worldDataId)
+public class World
 {
     
-    public readonly string WorldDataId = worldDataId;
+    public readonly string WorldDataId;
     
     public readonly Dictionary<Coordinate, Chunk> Chunks = [];
     
     private readonly FastNoiseLite _generatorFastNoise = new()
     {
-        NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin
+        NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,
     };
+    
+    
+    public World(string worldDataId)
+    {
+        WorldDataId = worldDataId;
+        
+        _generatorFastNoise.Seed = 1239512760;
+    }
     
     
     public Chunk GetChunkAtPosition(Coordinate position)
@@ -33,22 +41,7 @@ public class World(string worldDataId)
     
     public string GetGeneratedVoxelId(Coordinate position)
     {
-        // float heightPercent = Mathf.Clamp(_generatorFastNoise.GetNoise2D(position.X, position.Z) * 10 + 1, -10f, 20f) / 2f;
-        // int height = Mathf.FloorToInt(25 * heightPercent);
-        
-        // if (position.Y > height)
-        //     return null;
-        
-        // if (position.Y == height)
-        //     return "glitchifyed.base.voxels.grass";
-        
-        // if (position.Y >= height - 3)
-        //     return "glitchifyed.base.voxels.dirt";
-        
-        // return "glitchifyed.base.voxels.stone";
-        
         var worldData = LoadedData.GetDataById<WorldData>(WorldDataId);
-        // var generatorData = LoadedData.GetDataById<LuaFunctionData>(worldData.GeneratorId);
         
         var result = LuauScriptManager.GetFunction(worldData.GeneratorId).Invoke([position.X, position.Y, position.Z]);
         
@@ -60,14 +53,6 @@ public class World(string worldDataId)
         
         return null;
     }
-    
-    // public string GetGeneratedVoxelId(Coordinate position)
-    // {
-    //     if (position.Y < 0)
-    //         return "game.voxel.stone";
-        
-    //     return null;
-    // }
     
     public bool TryGetGeneratedVoxelData(Coordinate voxelPos, out VoxelData voxelData)
     {

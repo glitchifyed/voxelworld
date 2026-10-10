@@ -61,7 +61,7 @@ public class DataFileManager(string basePath = "user:/")
 			if (!packIdObj.TryGet(out string packId) || !packNamesToIds.TryGetValue(packId, out var packFileName))
 				throw new InvalidOperationException($"Loaded packs contains an invalid ID: {packId}");
 
-			PackData packData = GetPackData(packId, $"{path}/packs/{packFileName}/content");
+			PackData packData = GetPackData(packId, $"{path}/packs/{packFileName}");
 
 			loadedPacks.Add(packData);
 		}
@@ -75,8 +75,14 @@ public class DataFileManager(string basePath = "user:/")
 		PackData packData = new(packId);
 
 
+		var packDirectory = new FilesystemInstance(BasePath, packPath);
+		var metadata = packDirectory.Get("metadata.json").ReadJson();
+
+		ScanMetadata(packData, metadata);
+
+
 		Queue<FilesystemInstance> queue = [];
-		queue.Enqueue(new FilesystemInstance(BasePath, packPath));
+		queue.Enqueue(packDirectory.Get("content"));
 
 		while (queue.TryDequeue(out var parentFile))
 		{
@@ -96,6 +102,20 @@ public class DataFileManager(string basePath = "user:/")
 
 
 		return packData;
+	}
+
+	private void ScanMetadata(PackData packData, JsonObject metadata)
+	{
+		packData.Globals["pack_id"] = metadata.Get<string>("pack_id");
+		
+		if (metadata.TryGet("globals", out var globals))
+		{
+			if (!globals.IsDictionary())
+				throw new InvalidOperationException($"Pack '{packData.Id}' contains invalid globals: not a dictionary");
+			
+			foreach (var obj in globals.GetDictionaryEnumerator())
+				packData.Globals[obj.Key] = obj.Value.Get<string>();
+		}
 	}
 
 	private void ScanDataFile(FilesystemInstance file, PackData packData)

@@ -37,13 +37,27 @@ public class LuauScriptManager
             {
                 GD.PushWarning("Incorrect AddData arguments.");
 
-                return default;
+                return 0;
             }
 
             _luaFunctionsById[id] = function;
 
-            return default;
+            return 0;
         });
+        
+        // State.RegisterFunction("GetGlobal", (state, arguments) =>
+        // {
+        //     if (arguments.Length < 1 || !arguments[0].TryRead(out string id))
+        //     {
+        //         GD.PushWarning("Incorrect GetGlobal arguments.");
+                
+        //         return 0;
+        //     }
+            
+            
+            
+        //     return 1; // RETURN AMOUNT
+        // });
         
         foreach (var pack in packs)
             foreach (var scriptFile in pack.Scripts)

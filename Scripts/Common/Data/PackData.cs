@@ -8,6 +8,7 @@ public class PackData
     
     public readonly HashSet<GenericData> Data = [];
     public readonly HashSet<FilesystemInstance> Scripts = [];
+    public readonly Dictionary<string, string> Globals = [];
     
     
     public PackData(string id)
