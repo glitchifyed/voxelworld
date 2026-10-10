@@ -48,9 +48,9 @@ public class World(string worldDataId)
         // return "glitchifyed.base.voxels.stone";
         
         var worldData = LoadedData.GetDataById<WorldData>(WorldDataId);
-        var generatorData = LoadedData.GetDataById<LuaFunctionData>(worldData.GeneratorId);
+        // var generatorData = LoadedData.GetDataById<LuaFunctionData>(worldData.GeneratorId);
         
-        var result = generatorData.LuaFunction.Invoke([position.X, position.Y, position.Z]);
+        var result = LuauScriptManager.GetFunction(worldData.GeneratorId).Invoke([position.X, position.Y, position.Z]);
         
         if (!result[0].TryRead(out string voxelId))
             throw new InvalidOperationException("Invalid voxel id.");

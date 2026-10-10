@@ -6,18 +6,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 public static class LoadedData
 {
-
-    public static LuauScriptManager LuauManager = new();
-
     private static readonly Dictionary<string, GenericData> _loadedData = [];
 
 
     public static void Load(DataFileManager data)
     {
+        LuauScriptManager.Clear();
+
         _loadedData.Clear();
         GenericData.Reset();
 
@@ -34,20 +34,7 @@ public static class LoadedData
                 Add(dataObject);
         }
 
-        // Task.Run(() => RunScripts(packs));
-        RunScripts(packs);
-    }
-
-
-    public static void RunScripts(HashSet<PackData> packs)
-    {
-        // TODO: cancellation token when reloading
-
-        foreach (var pack in packs)
-            foreach (var scriptFile in pack.Scripts)
-                LuauManager.State.DoString(scriptFile.ReadString());
-
-
+        LuauScriptManager.Initialize(packs);
     }
 
 
@@ -72,21 +59,6 @@ public static class LoadedData
 
     public static GenericData GetDataById(string id)
         => GetDataById<GenericData>(id);
-
-
-    public static int LuauAddData(LuauState state, LuaFuncArguments arguments)
-    {
-        if (arguments.Length < 2 || !arguments[0].TryRead(out string id) || !arguments[1].TryRead(out LuaFunction function))
-        {
-            GD.PushWarning("Incorrect AddData arguments.");
-
-            return default;
-        }
-
-        Add(new LuaFunctionData(id, function));
-
-        return default;
-    }
 
 
     private static void Add(GenericData data)
