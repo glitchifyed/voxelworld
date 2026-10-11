@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cvk66uxer7xri"]
 
 [ext_resource type="Script" uid="uid://cil51r0tbuimx" path="res://Scripts/Client/Client.cs" id="1_kwblh"]
+[ext_resource type="Script" uid="uid://bkfgktqg45kl0" path="res://Scripts/Client/Player/UI/DebugScreen.cs" id="2_wkehv"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_nnsk1"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -25,3 +26,25 @@ shadow_enabled = true
 
 [node name="Client" type="Node" parent="." unique_id=920956850]
 script = ExtResource("1_kwblh")
+
+[node name="Debug Screen" type="CanvasLayer" parent="Client" unique_id=1235117119 node_paths=PackedStringArray("_coordinatesLabel", "_fillingLabel", "_meshingLabel")]
+script = ExtResource("2_wkehv")
+_coordinatesLabel = NodePath("VBoxContainer/Coordinates")
+_fillingLabel = NodePath("VBoxContainer/Filling Chunks")
+_meshingLabel = NodePath("VBoxContainer/Meshing Chunks")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Client/Debug Screen" unique_id=191000446]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Coordinates" type="Label" parent="Client/Debug Screen/VBoxContainer" unique_id=1702484392]
+layout_mode = 2
+text = "{X, Y, Z}"
+
+[node name="Filling Chunks" type="Label" parent="Client/Debug Screen/VBoxContainer" unique_id=677537456]
+layout_mode = 2
+text = "{filling}"
+
+[node name="Meshing Chunks" type="Label" parent="Client/Debug Screen/VBoxContainer" unique_id=34984796]
+layout_mode = 2
+text = "{calculating}"

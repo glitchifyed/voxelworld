@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public class VoxelData(string id, string langId = null) : GenericData(id, langId)
+public class VoxelData(string id) : GenericData(id)
 {
     public bool Renderable = true;
     public bool Translucent = false;

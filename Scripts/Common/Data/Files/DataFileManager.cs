@@ -24,7 +24,7 @@ public class DataFileManager(string basePath = "user:/")
 		}
 	}
 
-	public HashSet<PackData> CompileDataPacks(string path)
+	public List<PackData> CompileDataPacks(string path)
 	{
 		// Get pack ids from directories
 		Dictionary<string, string> packNamesToIds = [];
@@ -54,14 +54,14 @@ public class DataFileManager(string basePath = "user:/")
 		if (!packsList.IsArray())
 			throw new InvalidOperationException("Data contains an invalid loaded_packs.json.");
 
-		HashSet<PackData> loadedPacks = [];
+		List<PackData> loadedPacks = [];
 
 		foreach (var packIdObj in packsList.GetArrayEnumerator())
 		{
 			if (!packIdObj.TryGet(out string packId) || !packNamesToIds.TryGetValue(packId, out var packFileName))
 				throw new InvalidOperationException($"Loaded packs contains an invalid ID: {packId}");
 
-			PackData packData = GetPackData(packId, $"{path}/packs/{packFileName}/content");
+			PackData packData = GetPackData(packId, $"{path}/packs/{packFileName}");
 
 			loadedPacks.Add(packData);
 		}
@@ -75,8 +75,14 @@ public class DataFileManager(string basePath = "user:/")
 		PackData packData = new(packId);
 
 
+		var packDirectory = new FilesystemInstance(BasePath, packPath);
+		var metadata = packDirectory.Get("metadata.json").ReadJson();
+
+		ScanMetadata(packData, metadata);
+
+
 		Queue<FilesystemInstance> queue = [];
-		queue.Enqueue(new FilesystemInstance(BasePath, packPath));
+		queue.Enqueue(packDirectory.Get("content"));
 
 		while (queue.TryDequeue(out var parentFile))
 		{
@@ -96,6 +102,20 @@ public class DataFileManager(string basePath = "user:/")
 
 
 		return packData;
+	}
+
+	private void ScanMetadata(PackData packData, JsonObject metadata)
+	{
+		packData.Globals["pack_id"] = metadata.Get<string>("pack_id");
+		
+		if (metadata.TryGet("globals", out var globals))
+		{
+			if (!globals.IsDictionary())
+				throw new InvalidOperationException($"Pack '{packData.Id}' contains invalid globals: not a dictionary");
+			
+			foreach (var obj in globals.GetDictionaryEnumerator())
+				packData.Globals[obj.Key] = obj.Value.Get<string>();
+		}
 	}
 
 	private void ScanDataFile(FilesystemInstance file, PackData packData)
@@ -122,22 +142,23 @@ public class DataFileManager(string basePath = "user:/")
 
 				"voxel" => GetVoxelData(id, dataPair.Value),
 
-				"dimension" => null,
+				"world" => GetWorldData(id, dataPair.Value),
 
-				_ => throw new InvalidOperationException($"'{type}' is not a valid data type.")
+				_ => throw new InvalidOperationException($"File path '{file.AbsolutePath}' contains invalid data type '{type}'.")
 			};
 
 			if (dataObj != null)
 				packData.Data.Add(dataObj);
 		}
 	}
-	
+
 	private void ScanScriptFile(FilesystemInstance file, PackData packData)
 	{
 		// TODO: Throw errors when things go wrong
 
 		packData.Scripts.Add(file);
 	}
+
 
 	private VoxelData GetVoxelData(string id, JsonObject jsonData)
 	{
@@ -150,6 +171,16 @@ public class DataFileManager(string basePath = "user:/")
 			voxelData.Translucent = translucent;
 
 		return voxelData;
+	}
+
+	private WorldData GetWorldData(string id, JsonObject jsonData)
+	{
+		WorldData worldData = new(id);
+
+		if (jsonData.TryGet("generator", out var generatorObj) && generatorObj.TryGet(out string generatorId))
+			worldData.GeneratorId = generatorId;
+
+		return worldData;
 	}
 
 

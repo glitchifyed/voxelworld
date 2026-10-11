@@ -1,4 +1,8 @@
 {
 	"pack_id": "glitchifyed.base",
-	"version": "1.0"
+	"version": "1.0",
+	
+	"globals": {
+		"example": "glitchifyed.base.global.example"
+	}
 }

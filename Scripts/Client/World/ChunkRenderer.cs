@@ -8,8 +8,8 @@ public class ChunkRenderer
     
     private Coordinate? _chunkPosition;
     
-    private ThreadedTasks<Chunk> _threadedVoxelFill;
-    private ThreadedTasks<Chunk> _threadedMeshData;
+    public ThreadedTasks<Chunk> ThreadedVoxelFill;
+    public ThreadedTasks<Chunk> ThreadedMeshData;
     
     private readonly ConcurrentQueue<Chunk> _chunksMeshesToCreate = [];
     
@@ -26,8 +26,8 @@ public class ChunkRenderer
     
     public void OnReady()
     {
-        _threadedVoxelFill = new(GameSettings.CHUNK_FILL_THREADS, SequencedVoxelFill);
-        _threadedMeshData = new(GameSettings.CHUNK_MESH_THREADS, SequencedMeshData);
+        ThreadedVoxelFill = new(GameSettings.CHUNK_FILL_THREADS, SequencedVoxelFill);
+        ThreadedMeshData = new(GameSettings.CHUNK_MESH_THREADS, SequencedMeshData);
     }
     
     public void OnProcess()
@@ -93,7 +93,7 @@ public class ChunkRenderer
             
             
             if (chunk.RequiresVoxelFill())
-                _threadedVoxelFill.AddTask(chunk);
+                ThreadedVoxelFill.AddTask(chunk);
         }
     }
     
@@ -119,7 +119,7 @@ public class ChunkRenderer
         chunk.FillVoxels();
         
         if (chunk.RequiresMeshData())
-            _threadedMeshData.AddTask(chunk);
+            ThreadedMeshData.AddTask(chunk);
     }
     
     private void SequencedMeshData(Chunk chunk)

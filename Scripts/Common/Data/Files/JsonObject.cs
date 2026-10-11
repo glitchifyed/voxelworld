@@ -115,6 +115,44 @@ public partial class JsonObject
         return value != null && !value.IsEmpty();
     }
     
+    public T Get<T>()
+    {
+        if (!TryGet(out T value))
+            throw new InvalidOperationException($"Value of type '{typeof(T).FullName}' not found in JsonObject");
+        
+        return value;
+    }
+    
+    public JsonObject Get(int index)
+    {
+        if (!TryGet(index, out var value))
+            throw new InvalidOperationException($"Index '{index}' not found in JsonObject");
+        
+        return value;
+    }
+    
+    public T Get<T>(int index)
+    {
+        var obj = Get(index);
+        
+        return obj.Get<T>();
+    }
+    
+    public JsonObject Get(string key)
+    {
+        if (!TryGet(key, out var value))
+            throw new InvalidOperationException($"Key '{key}' not found in JsonObject");
+        
+        return value;
+    }
+    
+    public T Get<T>(string key)
+    {
+        var obj = Get(key);
+        
+        return obj.Get<T>();
+    }
+    
     
     // Enumerators
     public IEnumerable<JsonObject> GetArrayEnumerator()

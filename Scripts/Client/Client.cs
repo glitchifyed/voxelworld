@@ -10,8 +10,7 @@ public partial class Client : Endpoint
 
     public static Camera3D Viewpoint { get; private set; }
     
-    
-    private readonly ChunkRenderer _chunkRenderer = new();
+    public static readonly ChunkRenderer ChunkRenderer = new();
 
 
     public override void _Ready()
@@ -26,7 +25,7 @@ public partial class Client : Endpoint
         AddChild(Viewpoint);
         
         
-        _chunkRenderer.OnReady();
+        ChunkRenderer.OnReady();
     }
 
     public override void _Process(double delta)
@@ -37,6 +36,6 @@ public partial class Client : Endpoint
         PlayerInput.CheckInputs();
         
         
-        _chunkRenderer.OnProcess();
+        ChunkRenderer.OnProcess();
     }
 }
