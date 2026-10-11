@@ -43,10 +43,10 @@ public class LuauScriptManager
             foreach (var runner in manager._runners)
             {
                 runner.State.Dispose();
-                
+
                 foreach (var table in runner.Tables)
                     table.Dispose();
-                
+
                 runner.Tables.Clear();
             }
 
@@ -64,11 +64,12 @@ public class LuauScriptManager
     {
         var state = runner.State;
         state.OpenLibraries();
-        
-        
+
+
         var gameTable = runner.RegisterTable("Game");
-        
-        gameTable.RegisterFunction("Print", state.CreateFunction((state, arguments) =>
+
+
+        gameTable.RegisterValue("Print", state.CreateFunction((state, arguments) =>
         {
             string printString = null;
 
@@ -79,8 +80,8 @@ public class LuauScriptManager
 
             return 0;
         }));
-        
-        gameTable.RegisterFunction("SetMethod", state.CreateFunction((state, arguments) =>
+
+        gameTable.RegisterValue("SetMethod", state.CreateFunction((state, arguments) =>
         {
             if (arguments.Length < 2 || !arguments[0].TryRead(out string id) || !arguments[1].TryRead(out LuaFunction function))
             {
@@ -93,8 +94,8 @@ public class LuauScriptManager
 
             return 0;
         }));
-        
-        gameTable.RegisterFunction("GetGlobal", state.CreateFunction((state, arguments) =>
+
+        gameTable.RegisterValue("GetGlobal", state.CreateFunction((state, arguments) =>
         {
             if (arguments.Length < 1 || !arguments[0].TryRead(out string id))
             {
@@ -110,23 +111,44 @@ public class LuauScriptManager
             return 1;
         }));
         
-        gameTable.RegisterFunction("GetNoise", state.CreateFunction((state, arguments) =>
+        
+        var generationTable = state.CreateTable();
+        
+        generationTable.RegisterValue("ChunkVoxelSize", GameSettings.CHUNK_VOXEL_SIZE);
+
+        generationTable.RegisterValue("GetNoise", state.CreateFunction((state, arguments) =>
         {
             if (arguments.Length < 3 || !arguments[0].TryRead(out float x) || !arguments[1].TryRead(out float y) || !arguments[2].TryRead(out float z))
             {
-                GD.PushWarning("Incorrect GetNoise XY.");
+                GD.PushWarning("Incorrect GetNoise XYZ.");
 
                 return 0;
             }
-            
+
             var noiseUnbound = Endpoint.CurrentWorld.GeneratorFastNoise.GetNoise3D(x, y, z);
             var boundNoise = Mathf.Clamp(noiseUnbound + 1, 0, 2) / 2;
-            
+
             state.Push(boundNoise);
 
             return 1;
         }));
         
+        generationTable.RegisterValue("GetChunkIndex", state.CreateFunction((state, arguments) =>
+        {
+            if (arguments.Length < 3 || !arguments[0].TryRead(out int x) || !arguments[1].TryRead(out int y) || !arguments[2].TryRead(out int z))
+            {
+                GD.PushWarning("Incorrect GetChunkIndex XYZ.");
+
+                return 0;
+            }
+            
+            state.Push(new Coordinate(x, y, z).GetIndexInChunk());
+            
+            return 1;
+        }));
+        
+        gameTable.RegisterValue("Generation", generationTable);
+
 
         foreach (var scriptFile in runner.PackData.Scripts)
             state.DoString(scriptFile.ReadString());

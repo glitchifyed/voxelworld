@@ -15,7 +15,13 @@ declare Game: {
     SetMethod: (id: string, callback: (...any) -> (...any)) -> (),
     GetGlobal: (id: string) -> string,
     
-    GetNoise: (x: number, y: number, z: number) -> number
+    Generation: {
+        ChunkVoxelSize: number,
+        
+        GetNoise: (x: number, y: number, z: number) -> number,
+        
+        GetChunkIndex: (x: number, y: number, z: number) -> number
+    }
 }
 
 export type Vector3 = {
@@ -27,4 +33,4 @@ export type Vector3 = {
     Unit: Vector3
 }
 
-export type GeneratorCallback = (x: number, y: number, z: number) -> string
+export type GeneratorCallback = (chunk_x: number, chunk_y: number, chunk_z: number) -> {[number]: string}

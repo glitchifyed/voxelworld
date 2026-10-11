@@ -33,37 +33,65 @@ public class World(string worldDataId, int seed)
     }
 
 
-    public string GetGeneratedVoxelId(Coordinate position)
+    // public string GetGeneratedVoxelId(Coordinate position)
+    // {
+    //     var worldData = LoadedData.GetDataById<WorldData>(WorldDataId);
+
+    //     var packFunction = LuauScriptManager.GetFunction(worldData.GeneratorId);
+    //     var result = packFunction.Function.Invoke([position.X, position.Y, position.Z]);
+
+    //     if (!result[0].TryRead(out string voxelId))
+    //         throw new InvalidOperationException("Invalid voxel id.");
+
+    //     if (voxelId != "")
+    //         return packFunction.Pack.ReplaceGlobals(voxelId);
+
+    //     return null;
+    // }
+    
+    public bool FillVoxels(Chunk chunk)
     {
+        bool somethingWasChanged = false;
+        
         var worldData = LoadedData.GetDataById<WorldData>(WorldDataId);
-
+        
         var packFunction = LuauScriptManager.GetFunction(worldData.GeneratorId);
-        var result = packFunction.Function.Invoke([position.X, position.Y, position.Z]);
-
-        if (!result[0].TryRead(out string voxelId))
-            throw new InvalidOperationException("Invalid voxel id.");
-
-        if (voxelId != "")
-            return packFunction.Pack.ReplaceGlobals(voxelId);
-
-        return null;
-    }
-
-    public bool TryGetGeneratedVoxelData(Coordinate voxelPos, out VoxelData voxelData)
-    {
-        string generatedId = GetGeneratedVoxelId(voxelPos);
-
-        if (generatedId == null)
+        var result = packFunction.Function.Invoke([chunk.GlobalPosition.X, chunk.GlobalPosition.Y, chunk.GlobalPosition.Z]);
+        
+        if (!result[0].TryRead(out LuaTable voxels))
+            throw new InvalidOperationException("Invalid voxel ids.");
+        
+        for (int index = 0; index < GameSettings.CHUNK_VOXEL_COUNT; index++)
         {
-            voxelData = null;
-
-            return false;
+            var voxelIdValue = voxels[index];
+            if (!voxelIdValue.TryRead(out string voxelId))
+                continue;
+            
+            chunk.Voxels[index] = LoadedData.GetDataById(packFunction.Pack.ReplaceGlobals(voxelId)).NumericId;
+            
+            somethingWasChanged = true;
         }
-
-        voxelData = LoadedData.GetDataById<VoxelData>(generatedId);
-
-        return voxelData != null;
+        
+        voxels.Dispose();
+        
+        return somethingWasChanged;
     }
+
+    // public bool TryGetGeneratedVoxelData(Coordinate voxelPos, out VoxelData voxelData)
+    // {
+    //     string generatedId = GetGeneratedVoxelId(voxelPos);
+
+    //     if (generatedId == null)
+    //     {
+    //         voxelData = null;
+
+    //         return false;
+    //     }
+
+    //     voxelData = LoadedData.GetDataById<VoxelData>(generatedId);
+
+    //     return voxelData != null;
+    // }
 
     public bool TryGetVoxelIdAtPosition(Coordinate position, out string id)
     {
@@ -82,7 +110,8 @@ public class World(string worldDataId, int seed)
             }
         }
 
-        id = GetGeneratedVoxelId(position);
+        // id = GetGeneratedVoxelId(position);
+        id = null;
 
         return id != null;
     }
