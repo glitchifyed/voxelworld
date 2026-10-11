@@ -43,13 +43,14 @@ public class World
     {
         var worldData = LoadedData.GetDataById<WorldData>(WorldDataId);
 
-        var result = LuauScriptManager.GetFunction(worldData.GeneratorId).Invoke([position.X, position.Y, position.Z]);
+        var packFunction = LuauScriptManager.GetFunction(worldData.GeneratorId);
+        var result = packFunction.Function.Invoke([position.X, position.Y, position.Z]);
 
         if (!result[0].TryRead(out string voxelId))
             throw new InvalidOperationException("Invalid voxel id.");
 
         if (voxelId != "")
-            return voxelId;
+            return packFunction.Pack.ReplaceGlobals(voxelId);
 
         return null;
     }

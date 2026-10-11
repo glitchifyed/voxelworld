@@ -10,7 +10,7 @@ public class LuauScriptManager
     private static ThreadLocal<LuauScriptManager> _managers;
 
     private readonly LuauScriptRunner[] _runners;
-    private readonly Dictionary<string, LuaFunction> _luaFunctionsById = [];
+    private readonly Dictionary<string, PackFunction> _luaFunctionsById = [];
 
 
     private LuauScriptManager(List<PackData> packs)
@@ -44,7 +44,7 @@ public class LuauScriptManager
                 runner.State.Dispose();
 
             foreach (var function in manager._luaFunctionsById)
-                function.Value.Dispose();
+                function.Value.Function.Dispose();
         }
 
         _managers.Dispose();
@@ -79,7 +79,7 @@ public class LuauScriptManager
                 return 0;
             }
 
-            _luaFunctionsById[runner.PackData.ReplaceGlobals(id)] = function;
+            _luaFunctionsById[runner.PackData.ReplaceGlobals(id)] = new(runner.PackData, function);
 
             return 0;
         });
@@ -113,6 +113,6 @@ public class LuauScriptManager
     // public static LuauState GetState(int packIndex)
     //     => GetManager().State;
 
-    public static LuaFunction GetFunction(string id)
+    public static PackFunction GetFunction(string id)
         => GetManager()._luaFunctionsById[id];
 }

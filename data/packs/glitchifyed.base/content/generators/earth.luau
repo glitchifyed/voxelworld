@@ -1,11 +1,19 @@
 -- type AddData = (id: string, (...any) -> (...any)) -> ()
 
 SetMethod("$(pack_id).generators.earth", function(x, y, z)
-    if (y > math.noise(x / 19 + 0.1264273473, z / 19 + 0.112346437327) * 25) then
+    local height = 10
+    
+    if (y > height) then
         return ""
     end
     
-    return "glitchifyed.base.voxels.grass"
+    if (y == height) then
+        return "$(pack_id).voxels.grass"
+    end
+    
+    if (y > height - 3) then
+        return "$(pack_id).voxels.dirt"
+    end
+    
+    return "$(pack_id).voxels.stone"
 end :: GeneratorCallback)
-
-GetGlobal("example")
