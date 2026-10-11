@@ -44,6 +44,21 @@ public readonly record struct Coordinate
     public readonly System.Numerics.Vector3 ToNumericsVector3()
         => new(X, Y, Z);
     
+    
+    public int GetIndexInChunk()
+		=> X + GameSettings.CHUNK_VOXEL_SIZE * (Y + GameSettings.CHUNK_VOXEL_SIZE * Z);
+    
+    public static Coordinate GetArrayPositionInChunk(int index)
+	{
+		int reduced = index / GameSettings.CHUNK_VOXEL_SIZE;
+		
+		int z = reduced / GameSettings.CHUNK_VOXEL_SIZE;
+		int y = reduced - GameSettings.CHUNK_VOXEL_SIZE * z;
+		int x = index - GameSettings.CHUNK_VOXEL_SIZE * (y + GameSettings.CHUNK_VOXEL_SIZE * z);
+		
+		return new(x, y, z);
+	}
+    
 
     public override readonly string ToString()
         => $"({X}, {Y}, {Z})";

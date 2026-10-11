@@ -14,8 +14,10 @@ local function GetVoxelAtHeight(y: number, height: number)
     return "stone"
 end
 
-SetMethod("$(pack_id).generators.earth", function(x, y, z)
-    local height = math.floor(GetNoise(x * 2, z * 2, 0) * GetNoise(0, x * 0.3, z * 0.3) * GetNoise(x * 0.01, 0, z * 0.01) * 100)
+
+
+Game.SetMethod("$(pack_id).generators.earth", function(x, y, z)
+    local height = math.floor(Game.GetNoise(x * 2, z * 2, 0) * Game.GetNoise(0, x * 0.3, z * 0.3) * Game.GetNoise(x * 0.01, 0, z * 0.01) * 100)
     
     local voxel_id = GetVoxelAtHeight(y, height)
     
@@ -25,3 +27,9 @@ SetMethod("$(pack_id).generators.earth", function(x, y, z)
     
     return `$(pack_id).voxels.{voxel_id}`
 end :: GeneratorCallback)
+
+-- SetMethod("$(pack_id).generators.earth", function()
+--     local voxels: {[number]: string}
+    
+    
+-- end :: GeneratorCallback)

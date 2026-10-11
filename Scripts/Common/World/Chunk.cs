@@ -34,19 +34,19 @@ public class Chunk
 	private bool _requiresCreateMesh;
 	
 	
-	public static int GetArrayIndex(Coordinate position)
-		=> position.X + GameSettings.CHUNK_VOXEL_SIZE * (position.Y + GameSettings.CHUNK_VOXEL_SIZE * position.Z);
+	// public static int GetArrayIndex(Coordinate position)
+	// 	=> position.X + GameSettings.CHUNK_VOXEL_SIZE * (position.Y + GameSettings.CHUNK_VOXEL_SIZE * position.Z);
 	
-	public static Coordinate GetArrayPosition(int index)
-	{
-		int reduced = index / GameSettings.CHUNK_VOXEL_SIZE;
+	// public static Coordinate GetArrayPosition(int index)
+	// {
+	// 	int reduced = index / GameSettings.CHUNK_VOXEL_SIZE;
 		
-		int z = reduced / GameSettings.CHUNK_VOXEL_SIZE;
-		int y = reduced - GameSettings.CHUNK_VOXEL_SIZE * z;
-		int x = index - GameSettings.CHUNK_VOXEL_SIZE * (y + GameSettings.CHUNK_VOXEL_SIZE * z);
+	// 	int z = reduced / GameSettings.CHUNK_VOXEL_SIZE;
+	// 	int y = reduced - GameSettings.CHUNK_VOXEL_SIZE * z;
+	// 	int x = index - GameSettings.CHUNK_VOXEL_SIZE * (y + GameSettings.CHUNK_VOXEL_SIZE * z);
 		
-		return new(x, y, z);
-	}
+	// 	return new(x, y, z);
+	// }
 	
 	
 	public Chunk(Coordinate position)
@@ -66,7 +66,7 @@ public class Chunk
 	
 	
 	public int? GetVoxelIdAtPosition(Coordinate position)
-		=> _voxels[GetArrayIndex(position)];
+		=> _voxels[position.GetIndexInChunk()];
 	
 	public bool TryGetVoxelDataAtPosition(int index, out VoxelData voxelData)
 	{
@@ -93,7 +93,7 @@ public class Chunk
 		
 		for (int index = 0; index < GameSettings.CHUNK_VOXEL_COUNT; index++)
 		{
-			var voxelPos = GetArrayPosition(index) + GlobalPosition;
+			var voxelPos = Coordinate.GetArrayPositionInChunk(index) + GlobalPosition;
 			
 			if (!Endpoint.CurrentWorld.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
 				continue;
@@ -128,7 +128,7 @@ public class Chunk
 				)
 				continue;
 			
-			Coordinate localPos = GetArrayPosition(index);
+			Coordinate localPos = Coordinate.GetArrayPositionInChunk(index);
 			Coordinate voxelPos = localPos + GlobalPosition;
 			
 			for (int cubeFaceId = 0; cubeFaceId < MeshStructures.CubeFaceOffsets.Length; cubeFaceId++)

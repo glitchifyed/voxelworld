@@ -24,6 +24,12 @@ public static partial class Extensions
 
         throw new Exception(message ?? $"An error occurred.");
     }
+    
+    public static void RegisterFunction(this LuaTable table, string name, LuaFunction luaFunction)
+    {
+        table[LuaValue.FromString(name)] = luaFunction;
+    }
+        // => table[LuaValue.FromString(name)] = luaFunction;
 
 
     public static Color ColorFromString(string colorString)

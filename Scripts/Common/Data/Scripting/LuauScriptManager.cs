@@ -18,7 +18,7 @@ public class LuauScriptManager
         _runners = new LuauScriptRunner[packs.Count];
 
         for (int i = 0; i < packs.Count; i++)
-            _runners[i] = new(this, packs[i]);
+            _runners[i] = new(this, packs[i], LuauState.Create());
     }
 
 
@@ -41,7 +41,14 @@ public class LuauScriptManager
         foreach (var manager in _managers.Values)
         {
             foreach (var runner in manager._runners)
+            {
                 runner.State.Dispose();
+                
+                foreach (var table in runner.Tables)
+                    table.Dispose();
+                
+                runner.Tables.Clear();
+            }
 
             foreach (var function in manager._luaFunctionsById)
                 function.Value.Function.Dispose();
@@ -53,12 +60,15 @@ public class LuauScriptManager
     }
 
 
-    public LuauState GetState(LuauScriptRunner runner)
+    public void SetupState(LuauScriptRunner runner)
     {
-        var state = LuauState.Create();
+        var state = runner.State;
         state.OpenLibraries();
-
-        state.RegisterFunction("Print", (state, arguments) =>
+        
+        
+        var gameTable = runner.RegisterTable("Game");
+        
+        gameTable.RegisterFunction("Print", state.CreateFunction((state, arguments) =>
         {
             string printString = null;
 
@@ -68,9 +78,9 @@ public class LuauScriptManager
             GD.Print(printString ?? "nil");
 
             return 0;
-        });
-
-        state.RegisterFunction("SetMethod", (state, arguments) =>
+        }));
+        
+        gameTable.RegisterFunction("SetMethod", state.CreateFunction((state, arguments) =>
         {
             if (arguments.Length < 2 || !arguments[0].TryRead(out string id) || !arguments[1].TryRead(out LuaFunction function))
             {
@@ -82,9 +92,9 @@ public class LuauScriptManager
             _luaFunctionsById[runner.PackData.ReplaceGlobals(id)] = new(runner.PackData, function);
 
             return 0;
-        });
-
-        state.RegisterFunction("GetGlobal", (state, arguments) =>
+        }));
+        
+        gameTable.RegisterFunction("GetGlobal", state.CreateFunction((state, arguments) =>
         {
             if (arguments.Length < 1 || !arguments[0].TryRead(out string id))
             {
@@ -97,10 +107,10 @@ public class LuauScriptManager
 
             state.Push(global);
 
-            return 1; // RETURN AMOUNT
-        });
+            return 1;
+        }));
         
-        state.RegisterFunction("GetNoise", (state, arguments) =>
+        gameTable.RegisterFunction("GetNoise", state.CreateFunction((state, arguments) =>
         {
             if (arguments.Length < 3 || !arguments[0].TryRead(out float x) || !arguments[1].TryRead(out float y) || !arguments[2].TryRead(out float z))
             {
@@ -114,13 +124,12 @@ public class LuauScriptManager
             
             state.Push(boundNoise);
 
-            return 1; // RETURN AMOUNT
-        });
+            return 1;
+        }));
+        
 
         foreach (var scriptFile in runner.PackData.Scripts)
             state.DoString(scriptFile.ReadString());
-
-        return state;
     }
 
 
