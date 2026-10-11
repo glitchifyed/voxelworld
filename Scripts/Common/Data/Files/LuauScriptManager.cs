@@ -7,19 +7,58 @@ using NuLua.Luau;
 
 public class LuauScriptManager
 {
-    private static ThreadLocal<LuauScriptManager> _localManager;
+    private static ThreadLocal<LuauScriptManager> _managers;
 
-    public readonly LuauState State;
-
+    private readonly LuauScriptRunner[] _runners;
     private readonly Dictionary<string, LuaFunction> _luaFunctionsById = [];
 
 
-    private LuauScriptManager(HashSet<PackData> packs)
+    private LuauScriptManager(List<PackData> packs)
     {
-        State = LuauState.Create();
-        State.OpenLibraries();
+        _runners = new LuauScriptRunner[packs.Count];
 
-        State.RegisterFunction("print", (state, arguments) =>
+        for (int i = 0; i < packs.Count; i++)
+            _runners[i] = new(this, packs[i]);
+    }
+
+
+    public static void Initialize(List<PackData> packs)
+    {
+        if (_managers != null)
+            Clear();
+
+        _managers = new(
+            () => new(packs),
+            trackAllValues: true
+            );
+    }
+
+    public static void Clear()
+    {
+        if (_managers == null)
+            return;
+
+        foreach (var manager in _managers.Values)
+        {
+            foreach (var runner in manager._runners)
+                runner.State.Dispose();
+
+            foreach (var function in manager._luaFunctionsById)
+                function.Value.Dispose();
+        }
+
+        _managers.Dispose();
+
+        _managers = null;
+    }
+
+
+    public LuauState GetState(LuauScriptRunner runner)
+    {
+        var state = LuauState.Create();
+        state.OpenLibraries();
+
+        state.RegisterFunction("Print", (state, arguments) =>
         {
             string printString = null;
 
@@ -31,7 +70,7 @@ public class LuauScriptManager
             return 0;
         });
 
-        State.RegisterFunction("AddData", (state, arguments) =>
+        state.RegisterFunction("SetMethod", (state, arguments) =>
         {
             if (arguments.Length < 2 || !arguments[0].TryRead(out string id) || !arguments[1].TryRead(out LuaFunction function))
             {
@@ -40,62 +79,40 @@ public class LuauScriptManager
                 return 0;
             }
 
-            _luaFunctionsById[id] = function;
+            _luaFunctionsById[runner.PackData.ReplaceGlobals(id)] = function;
 
             return 0;
         });
-        
-        // State.RegisterFunction("GetGlobal", (state, arguments) =>
-        // {
-        //     if (arguments.Length < 1 || !arguments[0].TryRead(out string id))
-        //     {
-        //         GD.PushWarning("Incorrect GetGlobal arguments.");
-                
-        //         return 0;
-        //     }
-            
-            
-            
-        //     return 1; // RETURN AMOUNT
-        // });
-        
-        foreach (var pack in packs)
-            foreach (var scriptFile in pack.Scripts)
-                State.DoString(scriptFile.ReadString());
-    }
 
+        state.RegisterFunction("GetGlobal", (state, arguments) =>
+        {
+            if (arguments.Length < 1 || !arguments[0].TryRead(out string id))
+            {
+                GD.PushWarning("Incorrect GetGlobal arguments.");
 
-    public static void Initialize(HashSet<PackData> packs)
-    {
-        _localManager = new(() => {
-            return new(packs);
-        }, trackAllValues: true);
+                return 0;
+            }
+
+            var global = runner.PackData.Globals[id];
+
+            state.Push(global);
+
+            return 1; // RETURN AMOUNT
+        });
+
+        foreach (var scriptFile in runner.PackData.Scripts)
+            state.DoString(scriptFile.ReadString());
+
+        return state;
     }
 
 
     public static LuauScriptManager GetManager()
-        => _localManager.Value;
+        => _managers.Value;
 
-    public static LuauState GetState()
-        => GetManager().State;
+    // public static LuauState GetState(int packIndex)
+    //     => GetManager().State;
 
     public static LuaFunction GetFunction(string id)
         => GetManager()._luaFunctionsById[id];
-
-
-    public static void Clear()
-    {
-        if (_localManager == null)
-            return;
-
-        foreach (var value in _localManager.Values)
-        {
-            value.State.Dispose();
-            
-            foreach (var function in value._luaFunctionsById)
-                function.Value.Dispose();
-        }
-
-        _localManager.Dispose();
-    }
 }

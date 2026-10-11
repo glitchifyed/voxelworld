@@ -24,7 +24,7 @@ public class DataFileManager(string basePath = "user:/")
 		}
 	}
 
-	public HashSet<PackData> CompileDataPacks(string path)
+	public List<PackData> CompileDataPacks(string path)
 	{
 		// Get pack ids from directories
 		Dictionary<string, string> packNamesToIds = [];
@@ -54,7 +54,7 @@ public class DataFileManager(string basePath = "user:/")
 		if (!packsList.IsArray())
 			throw new InvalidOperationException("Data contains an invalid loaded_packs.json.");
 
-		HashSet<PackData> loadedPacks = [];
+		List<PackData> loadedPacks = [];
 
 		foreach (var packIdObj in packsList.GetArrayEnumerator())
 		{
