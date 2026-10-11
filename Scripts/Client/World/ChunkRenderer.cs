@@ -10,6 +10,7 @@ public class ChunkRenderer
     
     public ThreadedTasks<Chunk> ThreadedVoxelFill;
     public ThreadedTasks<Chunk> ThreadedMeshData;
+    public ThreadedTasks<Coordinate> ThreadedChunkScanner;
     
     private readonly ConcurrentQueue<Chunk> _chunksMeshesToCreate = [];
     
@@ -28,6 +29,7 @@ public class ChunkRenderer
     {
         ThreadedVoxelFill = new(GameSettings.CHUNK_FILL_THREADS, SequencedVoxelFill);
         ThreadedMeshData = new(GameSettings.CHUNK_MESH_THREADS, SequencedMeshData);
+        ThreadedChunkScanner = new(1, RunChunkScanner);
     }
     
     public void OnProcess()
@@ -39,6 +41,11 @@ public class ChunkRenderer
     }
     
     
+    public void RequestChunkMeshUpdate(Chunk chunk)
+    {
+        if (chunk.RequiresMeshData())
+            ThreadedMeshData.AddTask(chunk);
+    }
     
     
     private void CheckChunkPosition()
@@ -53,7 +60,8 @@ public class ChunkRenderer
         
         _chunkPosition = currentChunkPosition;
         
-        RunChunkScanner(currentChunkPosition);
+        // RunChunkScanner(currentChunkPosition);
+        ThreadedChunkScanner.AddTask(currentChunkPosition);
     }
     
     private void RunChunkScanner(Coordinate currentChunkPosition)
@@ -81,6 +89,17 @@ public class ChunkRenderer
             var position = currentChunkPosition + offset;
             
             Chunk chunk = Endpoint.CurrentWorld.GetChunkAtPosition(position);
+            
+            
+            for (int i = 0; i < MeshStructures.ChunkFaceOffsets.Length; i++)
+            {
+                ref readonly var faceOffset = ref MeshStructures.ChunkFaceOffsets[i];
+                
+                var adjacentChunk = Endpoint.CurrentWorld.GetChunkAtPosition(position + faceOffset);
+                
+                chunk.AdjacentChunks[i] = adjacentChunk;
+                adjacentChunk.AdjacentChunks[Array.IndexOf(MeshStructures.ChunkFaceOffsets, faceOffset * -1)] = chunk;
+            }
             
             
             // Only do something if the chunk hasn't already been rendered
@@ -118,8 +137,7 @@ public class ChunkRenderer
         
         chunk.FillVoxels();
         
-        if (chunk.RequiresMeshData())
-            ThreadedMeshData.AddTask(chunk);
+        RequestChunkMeshUpdate(chunk);
     }
     
     private void SequencedMeshData(Chunk chunk)

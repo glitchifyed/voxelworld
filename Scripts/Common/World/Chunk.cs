@@ -18,6 +18,7 @@ public class Chunk
 	
 	
 	public readonly int?[] Voxels = new int?[GameSettings.CHUNK_VOXEL_COUNT];
+	public readonly Chunk[] AdjacentChunks = new Chunk[6];
 	
 	private readonly ArrayMesher _arrayMesher = new();
 	
@@ -26,25 +27,12 @@ public class Chunk
 	private bool _isVoxelFilled;
 	
 	private bool _isAddingMeshData;
+	private bool _isMeshDataAdded;
+	
 	private bool _isCreatingMesh;
 	
 	private bool _requiresAddMeshData;
 	private bool _requiresCreateMesh;
-	
-	
-	// public static int GetArrayIndex(Coordinate position)
-	// 	=> position.X + GameSettings.CHUNK_VOXEL_SIZE * (position.Y + GameSettings.CHUNK_VOXEL_SIZE * position.Z);
-	
-	// public static Coordinate GetArrayPosition(int index)
-	// {
-	// 	int reduced = index / GameSettings.CHUNK_VOXEL_SIZE;
-		
-	// 	int z = reduced / GameSettings.CHUNK_VOXEL_SIZE;
-	// 	int y = reduced - GameSettings.CHUNK_VOXEL_SIZE * z;
-	// 	int x = index - GameSettings.CHUNK_VOXEL_SIZE * (y + GameSettings.CHUNK_VOXEL_SIZE * z);
-		
-	// 	return new(x, y, z);
-	// }
 	
 	
 	public Chunk(Coordinate position)
@@ -88,18 +76,6 @@ public class Chunk
 			return;
 		
 		_isVoxelFilling = true;
-		
-		// for (int index = 0; index < GameSettings.CHUNK_VOXEL_COUNT; index++)
-		// {
-		// 	var voxelPos = Coordinate.GetArrayPositionInChunk(index) + GlobalPosition;
-			
-		// 	if (!Endpoint.CurrentWorld.TryGetGeneratedVoxelData(voxelPos, out VoxelData voxelData))
-		// 		continue;
-
-		// 	_voxels[index] = voxelData.NumericId;
-			
-		// 	_requiresAddMeshData = true;
-		// }
 		
 		_requiresAddMeshData = Endpoint.CurrentWorld.FillVoxels(this);
 		
@@ -147,6 +123,7 @@ public class Chunk
 			}
 		}
 		
+		_isMeshDataAdded = true;
 		_isAddingMeshData = false;
 	}
 	
@@ -176,12 +153,27 @@ public class Chunk
 		_isVoxelFilled = false;
 		
 		_isAddingMeshData = false;
+		_isMeshDataAdded = false;
+		
 		_isCreatingMesh = false;
 		
 		_requiresAddMeshData = false;
 		_requiresCreateMesh = false;
 		
 		IsWithinRenderBounds = false;
+	}
+	
+	
+	public void RequestChunkMeshUpdate()
+	{
+		if (!IsWithinRenderBounds || !_isMeshDataAdded)
+			return;
+		
+		_requiresCreateMesh = true;
+		_isMeshDataAdded = false;
+		
+		// TODO: client vs server logic
+		Client.ChunkRenderer.RequestChunkMeshUpdate(this);
 	}
 	
 	

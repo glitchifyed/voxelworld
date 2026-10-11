@@ -82,4 +82,24 @@ public class MeshStructures
         new(y: -1),
 	];
 	
+	public static readonly Coordinate[] ChunkFaceOffsets = [
+		// Back
+		new(z: 1),
+
+		// Front
+		new(z: -1),
+
+		// Right
+        new(1),
+		
+		// Left
+        new(-1),
+		
+		// Top
+        new(y: 1),
+
+		// Bottom
+        new(y: -1),
+	];
+	
 }

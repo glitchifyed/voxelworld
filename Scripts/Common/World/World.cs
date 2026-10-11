@@ -69,6 +69,17 @@ public class World(string worldDataId, int seed)
             
             chunk.Voxels[index] = LoadedData.GetDataById(packFunction.Pack.ReplaceGlobals(voxelId)).NumericId;
             
+            var position = Coordinate.GetArrayPositionInChunk(index);
+            
+            if (GetChunkBoundaryDirection(position.Z, out var zDirection))
+                chunk.AdjacentChunks[zDirection]?.RequestChunkMeshUpdate();
+            
+            if (GetChunkBoundaryDirection(position.X, out var xDirection))
+                chunk.AdjacentChunks[xDirection + 2]?.RequestChunkMeshUpdate();
+            
+            if (GetChunkBoundaryDirection(position.Y, out var yDirection))
+                chunk.AdjacentChunks[yDirection + 4]?.RequestChunkMeshUpdate();
+            
             somethingWasChanged = true;
         }
         
@@ -92,6 +103,37 @@ public class World(string worldDataId, int seed)
 
     //     return voxelData != null;
     // }
+    
+    private bool GetChunkBoundaryDirection(int coordinate, out int direction)
+    {
+        if (coordinate == 0)
+        {
+            direction = 0;
+            
+            return true;
+        }
+        
+        if (coordinate == GameSettings.CHUNK_VOXEL_SIZE - 1)
+        {
+            direction = 1;
+            
+            return true;
+        }
+        
+        direction = -1;
+        
+        return false;
+        
+        // direction = coordinate switch
+        // {
+        //     0 => 0,
+        //     GameSettings.CHUNK_VOXEL_SIZE - 1 => 1,
+            
+        //     _ => -1
+        // };
+
+        // return coordinate != -1;
+    }
 
     public bool TryGetVoxelIdAtPosition(Coordinate position, out string id)
     {
