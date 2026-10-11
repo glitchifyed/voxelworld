@@ -4,25 +4,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public class World
+public class World(string worldDataId, int seed)
 {
-
-    public readonly string WorldDataId;
-
-    public readonly Dictionary<Coordinate, Chunk> Chunks = [];
-
-    private readonly FastNoiseLite _generatorFastNoise = new()
+    public readonly FastNoiseLite GeneratorFastNoise = new()
     {
-        NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,
+        NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex,
+        FractalType = FastNoiseLite.FractalTypeEnum.None,
+        Frequency = 0.01f,
+        Seed = seed
     };
 
+    public readonly string WorldDataId = worldDataId;
 
-    public World(string worldDataId)
-    {
-        WorldDataId = worldDataId;
-
-        _generatorFastNoise.Seed = 1239512760;
-    }
+    public readonly Dictionary<Coordinate, Chunk> Chunks = [];
 
 
     public Chunk GetChunkAtPosition(Coordinate position)

@@ -99,6 +99,23 @@ public class LuauScriptManager
 
             return 1; // RETURN AMOUNT
         });
+        
+        state.RegisterFunction("GetNoise", (state, arguments) =>
+        {
+            if (arguments.Length < 3 || !arguments[0].TryRead(out float x) || !arguments[1].TryRead(out float y) || !arguments[2].TryRead(out float z))
+            {
+                GD.PushWarning("Incorrect GetNoise XY.");
+
+                return 0;
+            }
+            
+            var noiseUnbound = Endpoint.CurrentWorld.GeneratorFastNoise.GetNoise3D(x, y, z);
+            var boundNoise = Mathf.Clamp(noiseUnbound + 1, 0, 2) / 2;
+            
+            state.Push(boundNoise);
+
+            return 1; // RETURN AMOUNT
+        });
 
         foreach (var scriptFile in runner.PackData.Scripts)
             state.DoString(scriptFile.ReadString());

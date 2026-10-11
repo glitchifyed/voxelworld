@@ -15,7 +15,7 @@ public partial class Universe : Node
 		
 		
 		// TODO: world creation
-		CurrentWorld = new("glitchifyed.base.worlds.earth");
+		CurrentWorld = new("glitchifyed.base.worlds.earth", 12345);
 		
 		
 		ChunksNode = new()
