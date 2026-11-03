@@ -1,10 +1,12 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 public partial class Universe : Node
 {
-	public World CurrentWorld;
+	public readonly Dictionary<string, World> Worlds = [];
+	public readonly List<Player> Players = [];
 	
 	public Node3D ChunksNode { get; private set; }
 	
@@ -15,7 +17,7 @@ public partial class Universe : Node
 		
 		
 		// TODO: world creation
-		CurrentWorld = new("glitchifyed.base.worlds.earth", 12345);
+		AddWorld("glitchifyed.base.worlds.earth", 12345);
 		
 		
 		ChunksNode = new()
@@ -32,4 +34,18 @@ public partial class Universe : Node
 		
         
     }
+	
+	
+	public World GetWorld(string id)
+		=> Worlds[id];
+	
+	
+	private World AddWorld(string id, int seed)
+	{
+		World world = new(this, id, seed);
+		
+		Worlds[id] = world;
+		
+		return world;
+	}
 }

@@ -1,4 +1,5 @@
 using Godot;
+using NuLua.Interop.Luau;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -7,6 +8,8 @@ public class Chunk
 {
 	public readonly Coordinate Position;
 	public readonly MeshInstance3D MeshInstance;
+	
+	public readonly World World;
 	
 	public Coordinate GlobalPosition
 	{
@@ -35,8 +38,10 @@ public class Chunk
 	private bool _requiresCreateMesh;
 	
 	
-	public Chunk(Coordinate position)
+	public Chunk(World world, Coordinate position)
 	{
+		World = world;
+		
 		Position = position;
 
         MeshInstance = new()
@@ -67,7 +72,13 @@ public class Chunk
 	
 	// public bool TryGetVoxelDataAtPosition(Coordinate position, out VoxelData voxelData)
 	// 	=> TryGetVoxelDataAtPosition(GetArrayIndex(position), out voxelData);
-		
+	
+	
+	public void SetValidity(bool validity)
+	{
+		MeshInstance.MaterialOverride = validity ? GameSettings.ChunkMeshMaterial : GameSettings.InvalidChunkMeshMaterial;
+	}
+	
 	
 	
 	public void FillVoxels()
@@ -77,7 +88,7 @@ public class Chunk
 		
 		_isVoxelFilling = true;
 		
-		_requiresAddMeshData = Endpoint.CurrentWorld.FillVoxels(this);
+		_requiresAddMeshData = World.FillVoxels(this);
 		
 		_isVoxelFilled = true;
 		_isVoxelFilling = false;
@@ -98,6 +109,20 @@ public class Chunk
 		
 		for (int index = 0; index < GameSettings.CHUNK_VOXEL_COUNT; index++)
 		{
+			if (!_isAddingMeshData)
+			{
+				AddMeshData();
+				
+				return;
+			}
+			
+			if (!IsWithinRenderBounds)
+			{
+				_isAddingMeshData = false;
+				
+				return;
+			}
+			
 			if (
 				!TryGetVoxelDataAtPosition(index, out VoxelData voxelData)
 				|| !voxelData.Renderable
@@ -109,10 +134,24 @@ public class Chunk
 			
 			for (int cubeFaceId = 0; cubeFaceId < MeshStructures.CubeFaceOffsets.Length; cubeFaceId++)
 			{
+				if (!_isAddingMeshData)
+				{
+					AddMeshData();
+					
+					return;
+				}
+				
+				if (!IsWithinRenderBounds)
+				{
+					_isAddingMeshData = false;
+					
+					return;
+				}
+				
 				Coordinate nextPos = voxelPos + MeshStructures.CubeFaceOffsets[cubeFaceId];
 				
 				if (
-					Endpoint.CurrentWorld.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
+					World.TryGetVoxelDataAtPosition(nextPos, out VoxelData adjacentVoxelData)
 					&& !adjacentVoxelData.Translucent
 					)
 					continue;
@@ -121,6 +160,13 @@ public class Chunk
 				
 				_requiresCreateMesh = true;
 			}
+		}
+		
+		if (RequiresMeshData())
+		{
+			AddMeshData();
+			
+			return;
 		}
 		
 		_isMeshDataAdded = true;
@@ -166,14 +212,19 @@ public class Chunk
 	
 	public void RequestChunkMeshUpdate()
 	{
-		if (!IsWithinRenderBounds || !_isMeshDataAdded)
-			return;
-		
-		_requiresCreateMesh = true;
+		_requiresAddMeshData = true;
 		_isMeshDataAdded = false;
+		
+		if (_isAddingMeshData)
+		{
+			_isAddingMeshData = false;
+			
+			return;
+		}
 		
 		// TODO: client vs server logic
 		Client.ChunkRenderer.RequestChunkMeshUpdate(this);
+		// Client.ChunkRenderer.SendChunkForReAddMesh(this);
 	}
 	
 	

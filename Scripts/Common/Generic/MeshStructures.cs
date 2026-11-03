@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public class MeshStructures
+public static class MeshStructures
 {
     public static readonly Vector3[] CubeVertices = [
 		new(0, 0, 1), // 0
@@ -70,10 +70,10 @@ public class MeshStructures
 		new(z: 1),
 
 		// Right
-        new(1),
+        new(x: 1),
 		
 		// Left
-        new(-1),
+        new(x: -1),
 		
 		// Top
         new(y: 1),
@@ -90,10 +90,10 @@ public class MeshStructures
 		new(z: -1),
 
 		// Right
-        new(1),
+        new(x: 1),
 		
 		// Left
-        new(-1),
+        new(x: -1),
 		
 		// Top
         new(y: 1),
@@ -101,5 +101,14 @@ public class MeshStructures
 		// Bottom
         new(y: -1),
 	];
+	
+	
+	public static int GetFaceOpposingIndex(int index)
+	{
+		if (index % 2 == 0)
+			return index + 1;
+		
+		return index - 1;
+	}
 	
 }

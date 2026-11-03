@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public class World(string worldDataId, int seed)
+public class World(Universe universe, string worldDataId, int seed)
 {
     public readonly FastNoiseLite GeneratorFastNoise = new()
     {
@@ -17,6 +17,8 @@ public class World(string worldDataId, int seed)
     public readonly string WorldDataId = worldDataId;
 
     public readonly Dictionary<Coordinate, Chunk> Chunks = [];
+    
+    public readonly Universe Universe = universe;
 
 
     public Chunk GetChunkAtPosition(Coordinate position)
@@ -24,30 +26,14 @@ public class World(string worldDataId, int seed)
         if (Chunks.TryGetValue(position, out Chunk storedChunk))
             return storedChunk;
 
-        Chunk newChunk = new(position);
+        Chunk newChunk = new(this, position);
         Chunks[position] = newChunk;
 
-        Endpoint.Universe.ChunksNode.CallDeferred(Node.MethodName.AddChild, newChunk.MeshInstance);
+        Universe.ChunksNode.CallDeferred(Node.MethodName.AddChild, newChunk.MeshInstance);
 
         return newChunk;
     }
 
-
-    // public string GetGeneratedVoxelId(Coordinate position)
-    // {
-    //     var worldData = LoadedData.GetDataById<WorldData>(WorldDataId);
-
-    //     var packFunction = LuauScriptManager.GetFunction(worldData.GeneratorId);
-    //     var result = packFunction.Function.Invoke([position.X, position.Y, position.Z]);
-
-    //     if (!result[0].TryRead(out string voxelId))
-    //         throw new InvalidOperationException("Invalid voxel id.");
-
-    //     if (voxelId != "")
-    //         return packFunction.Pack.ReplaceGlobals(voxelId);
-
-    //     return null;
-    // }
     
     public bool FillVoxels(Chunk chunk)
     {
@@ -61,6 +47,8 @@ public class World(string worldDataId, int seed)
         if (!result[0].TryRead(out LuaTable voxels))
             throw new InvalidOperationException("Invalid voxel ids.");
         
+        int xEdgeOfChunk = -1, yEdgeOfChunk = -1, zEdgeOfChunk = -1;
+        
         for (int index = 0; index < GameSettings.CHUNK_VOXEL_COUNT; index++)
         {
             var voxelIdValue = voxels[index];
@@ -72,39 +60,46 @@ public class World(string worldDataId, int seed)
             var position = Coordinate.GetArrayPositionInChunk(index);
             
             if (GetChunkBoundaryDirection(position.Z, out var zDirection))
-                chunk.AdjacentChunks[zDirection]?.RequestChunkMeshUpdate();
+                // chunk.AdjacentChunks[zDirection]?.RequestChunkMeshUpdate();
+                zEdgeOfChunk = zDirection;
             
             if (GetChunkBoundaryDirection(position.X, out var xDirection))
-                chunk.AdjacentChunks[xDirection + 2]?.RequestChunkMeshUpdate();
+                // chunk.AdjacentChunks[xDirection + 2]?.RequestChunkMeshUpdate();
+                xEdgeOfChunk = xDirection;
             
             if (GetChunkBoundaryDirection(position.Y, out var yDirection))
-                chunk.AdjacentChunks[yDirection + 4]?.RequestChunkMeshUpdate();
+                // chunk.AdjacentChunks[yDirection + 4]?.RequestChunkMeshUpdate();
+                yEdgeOfChunk = yDirection;
             
             somethingWasChanged = true;
         }
         
         voxels.Dispose();
         
+        // if (xEdgeOfChunk != -1)
+        //     // chunk.AdjacentChunks[xEdgeOfChunk + 2]?.RequestChunkMeshUpdate();
+        //     chunk.AdjacentChunks[xEdgeOfChunk + 2]?.SetValidity(false);
+        
+        // if (yEdgeOfChunk != -1)
+        //     // chunk.AdjacentChunks[yEdgeOfChunk + 4]?.RequestChunkMeshUpdate();
+        //     chunk.AdjacentChunks[yEdgeOfChunk + 4]?.SetValidity(false);
+        
+        // if (zEdgeOfChunk != -1)
+        //     // chunk.AdjacentChunks[zEdgeOfChunk]?.RequestChunkMeshUpdate();
+        //     chunk.AdjacentChunks[zEdgeOfChunk]?.SetValidity(false);
+        
+        if (somethingWasChanged)
+        {
+            foreach (var adjacentChunk in chunk.AdjacentChunks)
+            {
+                adjacentChunk.RequestChunkMeshUpdate();
+            }
+        }
+        
         return somethingWasChanged;
     }
-
-    // public bool TryGetGeneratedVoxelData(Coordinate voxelPos, out VoxelData voxelData)
-    // {
-    //     string generatedId = GetGeneratedVoxelId(voxelPos);
-
-    //     if (generatedId == null)
-    //     {
-    //         voxelData = null;
-
-    //         return false;
-    //     }
-
-    //     voxelData = LoadedData.GetDataById<VoxelData>(generatedId);
-
-    //     return voxelData != null;
-    // }
     
-    private bool GetChunkBoundaryDirection(int coordinate, out int direction)
+    private static bool GetChunkBoundaryDirection(int coordinate, out int direction)
     {
         if (coordinate == 0)
         {
@@ -123,16 +118,6 @@ public class World(string worldDataId, int seed)
         direction = -1;
         
         return false;
-        
-        // direction = coordinate switch
-        // {
-        //     0 => 0,
-        //     GameSettings.CHUNK_VOXEL_SIZE - 1 => 1,
-            
-        //     _ => -1
-        // };
-
-        // return coordinate != -1;
     }
 
     public bool TryGetVoxelIdAtPosition(Coordinate position, out string id)

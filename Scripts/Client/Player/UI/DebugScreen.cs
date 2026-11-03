@@ -6,6 +6,7 @@ public partial class DebugScreen : CanvasLayer
     [Export] private Label _coordinatesLabel;
     [Export] private Label _fillingLabel;
     [Export] private Label _meshingLabel;
+    [Export] private Label _remeshingLabel;
 
 
     public override void _Process(double delta)
@@ -16,5 +17,6 @@ public partial class DebugScreen : CanvasLayer
 
         _fillingLabel.Text = $"Filling: {Client.ChunkRenderer.ThreadedVoxelFill.GetCount()}";
         _meshingLabel.Text = $"Meshing: {Client.ChunkRenderer.ThreadedMeshData.GetCount()}";
+        // _remeshingLabel.Text = $"Remeshing: {Client.ChunkRenderer.ThreadedReMeshData.GetCount()}";
     }
 }

@@ -4,14 +4,9 @@ using System;
 public partial class Endpoint : Node
 {
     
-    public static Universe Universe { get; private set; }
+    public Universe Universe { get; private set; }
     
-    public static DataFileManager Data;
-    
-    public static World CurrentWorld
-    {
-        get => Universe.CurrentWorld;
-    }
+    public DataFileManager Data;
 
 
     public override void _Ready()

@@ -4,13 +4,18 @@ using System;
 public partial class Client : Endpoint
 {
     public static readonly PlayerInput PlayerInput = new();
+    public static readonly ChunkRenderer ChunkRenderer = new();
 
     public static Client Instance { get; private set; }
 
-
     public static Camera3D Viewpoint { get; private set; }
     
-    public static readonly ChunkRenderer ChunkRenderer = new();
+    public static Player Player { get; private set; }
+    public static World World
+    {
+        get => Player.World;
+    }
+    
 
 
     public override void _Ready()
@@ -21,8 +26,12 @@ public partial class Client : Endpoint
         Instance = this;
         
         
+        Player = new();
+        
         Viewpoint = (Camera3D) GD.Load<PackedScene>("res://Assets/Prefabs/SpectatorCamera.tscn").Instantiate();
-        AddChild(Viewpoint);
+        Player.AddChild(Viewpoint);
+        
+        AddChild(Player);
         
         
         ChunkRenderer.OnReady();

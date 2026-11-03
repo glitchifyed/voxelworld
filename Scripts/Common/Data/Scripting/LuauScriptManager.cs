@@ -12,9 +12,13 @@ public class LuauScriptManager
     private readonly LuauScriptRunner[] _runners;
     private readonly Dictionary<string, PackFunction> _luaFunctionsById = [];
 
+    private readonly Endpoint _endpoint;
 
-    private LuauScriptManager(List<PackData> packs)
+
+    private LuauScriptManager(Endpoint endpoint, List<PackData> packs)
     {
+        _endpoint = endpoint;
+        
         _runners = new LuauScriptRunner[packs.Count];
 
         for (int i = 0; i < packs.Count; i++)
@@ -118,14 +122,16 @@ public class LuauScriptManager
 
         generationTable.RegisterValue("GetNoise", state.CreateFunction((state, arguments) =>
         {
-            if (arguments.Length < 3 || !arguments[0].TryRead(out float x) || !arguments[1].TryRead(out float y) || !arguments[2].TryRead(out float z))
+            if (arguments.Length < 4 || !arguments[0].TryRead(out float x) || !arguments[1].TryRead(out float y) || !arguments[2].TryRead(out float z) || !arguments[3].TryRead(out string worldId))
             {
                 GD.PushWarning("Incorrect GetNoise XYZ.");
 
                 return 0;
             }
 
-            var noiseUnbound = Endpoint.CurrentWorld.GeneratorFastNoise.GetNoise3D(x, y, z);
+            World world = _endpoint.Universe.GetWorld(worldId);
+
+            var noiseUnbound = world.GeneratorFastNoise.GetNoise3D(x, y, z);
             var boundNoise = Mathf.Clamp(noiseUnbound + 1, 0, 2) / 2;
 
             state.Push(boundNoise);
